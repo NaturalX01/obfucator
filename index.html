@@ -3,382 +3,906 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EgiXploit Obfuscator v2.1</title>
+<title>EgiXploit — Lua Obfuscator</title>
 <style>
   :root {
-    --bg: #080d0a;
-    --panel: #0d1611;
-    --panel2: #111e17;
-    --border: #1a3326;
-    --border2: #244735;
+    --bg: #050a08;
+    --surface: #0a120f;
+    --surface-2: #0f1b16;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-accent: rgba(0, 255, 127, 0.35);
     --accent: #00ff7f;
-    --accent-dim: rgba(0, 255, 127, 0.12);
-    --text: #e2f5ea;
-    --muted: #6e947f;
+    --accent-hover: #00e070;
+    --accent-soft: rgba(0, 255, 127, 0.12);
+    --text: #f0f7f4;
+    --muted: #7b9689;
     --danger: #ff4d6d;
     --mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 45% at 50% -10%, rgba(0, 255, 127, 0.15), transparent),
+      radial-gradient(circle at 50% 100%, rgba(0, 180, 90, 0.05), transparent 50%);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 12px;
-    gap: 12px;
+    overflow-x: hidden;
   }
 
-  header {
+  .svg-icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* Top Navbar */
+  .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    box-shadow: 0 4px 20px rgba(0, 255, 127, 0.05);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5, 10, 8, 0.78);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
 
-  .brand {
+  .nav-brand {
     display: flex;
     align-items: center;
     gap: 10px;
   }
 
-  .badge-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
+  .nav-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: var(--accent-soft);
+    border: 1px solid var(--border-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
   }
 
-  .brand h1 {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+  .nav-title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-title span:first-child {
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.4px;
     color: #fff;
   }
 
-  .brand span {
-    color: var(--accent);
-  }
-
-  .version-tag {
+  .nav-title span:last-child {
     font-family: var(--mono);
-    font-size: 11px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    border: 1px solid var(--border2);
-    padding: 3px 8px;
-    border-radius: 6px;
+    font-size: 9.5px;
+    color: var(--muted);
   }
 
-  .options-bar {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px;
-  }
-
-  .opt-item {
-    display: flex;
+  .nav-status {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--panel2);
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(0, 255, 127, 0.07);
+    border: 1px solid rgba(0, 255, 127, 0.22);
+    padding: 5px 11px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .nav-status .status-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Main Container */
+  .container {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 28px 16px 40px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Hero Section */
+  .hero {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    background: var(--surface);
     border: 1px solid var(--border);
-    padding: 8px 10px;
-    border-radius: 7px;
-    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .hero-badge svg { color: var(--accent); width: 12px; height: 12px; }
+  .hero-badge span { color: var(--accent); }
+
+  .hero h1 {
+    font-size: clamp(28px, 6vw, 42px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.6px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  .hero h1 .highlight {
+    color: var(--accent);
+    text-shadow: 0 0 28px rgba(0, 255, 127, 0.35);
+  }
+
+  .hero p {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 440px;
+    margin: 0 auto 16px;
+    line-height: 1.5;
+  }
+
+  /* Feature Pills */
+  .feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .f-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
     cursor: pointer;
+    padding: 5px 9px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(10, 18, 15, 0.5);
+    transition: all 0.15s;
     user-select: none;
   }
 
-  .opt-item input[type="checkbox"] {
+  .f-pill:has(input:checked) {
+    color: var(--text);
+    background: rgba(0, 255, 127, 0.07);
+    border-color: rgba(0, 255, 127, 0.25);
+  }
+
+  .f-pill input {
     accent-color: var(--accent);
-    width: 15px;
-    height: 15px;
+    width: 12px;
+    height: 12px;
   }
 
+  /* Main Editor Box */
   .editor-card {
-    background: var(--panel);
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
+    border-radius: 14px;
     overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
   }
 
-  .card-header {
+  .editor-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    background: var(--panel2);
+    padding: 11px 15px;
+    background: rgba(15, 27, 22, 0.6);
     border-bottom: 1px solid var(--border);
+  }
+
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .file-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+  }
+
+  .file-name {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .file-name strong {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #fff;
+  }
+
+  .file-name span {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .editor-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--muted);
   }
 
-  .card-header .title {
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.6px;
+  .editor-stats .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
   }
 
-  .editor-body {
+  .code-area-wrap {
     display: flex;
-    height: 220px;
-    position: relative;
-    background: #070b09;
+    height: 250px;
+    background: #070d0a;
   }
 
-  .line-nums {
-    width: 38px;
-    padding: 12px 6px;
+  .gutter {
+    width: 42px;
+    padding: 14px 8px;
     text-align: right;
     font-family: var(--mono);
     font-size: 12px;
-    line-height: 1.6;
-    color: #3c5c4b;
-    background: #0a100d;
-    border-right: 1px solid var(--border);
+    line-height: 1.65;
+    color: #3a5247;
     user-select: none;
     overflow: hidden;
     white-space: pre;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
   }
 
-  textarea {
+  textarea#srcArea {
     flex: 1;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--text);
     background: transparent;
     border: none;
     outline: none;
     resize: none;
-    padding: 12px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text);
     tab-size: 2;
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-y: auto;
+    white-space: pre;
+    overflow: auto;
   }
 
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+  textarea#srcArea::placeholder {
+    color: #3f594d;
+  }
+
+  /* Editor Bottom Toolbar */
+  .editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 11px 14px;
+    background: rgba(15, 27, 22, 0.6);
+    border-top: 1px solid var(--border);
+  }
+
+  .left-tools {
+    display: flex;
+    align-items: center;
     gap: 8px;
   }
 
-  button {
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 11px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border2);
-    background: var(--panel2);
+  .tool-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
     color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
   }
 
-  button:active {
-    transform: scale(0.98);
+  .tool-btn:hover {
+    border-color: var(--border-accent);
+    background: rgba(0, 255, 127, 0.08);
   }
 
-  .btn-primary {
-    grid-column: span 2;
-    background: var(--accent);
-    color: #04140b;
+  .clear-btn {
+    background: transparent;
     border: none;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--danger); }
+
+  .obfuscate-btn {
+    background: var(--accent);
+    color: #03140b;
+    border: none;
+    font-size: 12.5px;
     font-weight: 700;
-    box-shadow: 0 0 15px rgba(0, 255, 127, 0.25);
+    padding: 9px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 0 20px rgba(0, 255, 127, 0.28);
+    transition: transform 0.12s, background 0.15s;
   }
 
-  .btn-clear {
-    color: var(--danger);
-    border-color: rgba(255, 77, 109, 0.3);
+  .obfuscate-btn:hover { background: var(--accent-hover); }
+  .obfuscate-btn:active { transform: scale(0.97); }
+
+  /* Sub-caption below editor */
+  .sub-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    padding: 0 4px;
   }
 
-  .status-bar {
+  .lang-tags {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lang-tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    color: var(--text);
+  }
+
+  /* Output Result Card */
+  .output-section {
+    display: none;
+    margin-top: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border-accent);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+  }
+
+  .output-section.active {
+    display: block;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(0, 255, 127, 0.06);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .output-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  textarea#outArea {
+    width: 100%;
+    height: 170px;
+    background: #060b09;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: #b8e6ce;
+    word-break: break-all;
+  }
+
+  /* Fullscreen Radar Loading Overlay */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 10, 8, 0.96);
+    backdrop-filter: blur(14px);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .loader-overlay.active {
+    display: flex;
+  }
+
+  .radar-box {
+    position: relative;
+    width: 170px;
+    height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .radar-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px dashed rgba(0, 255, 127, 0.3);
+    animation: spinSlow 8s linear infinite;
+  }
+
+  .radar-ring.r1 { width: 165px; height: 165px; }
+  .radar-ring.r2 { width: 120px; height: 120px; border-style: solid; border-color: rgba(0, 255, 127, 0.18); animation-direction: reverse; }
+  .radar-ring.r3 { width: 78px; height: 78px; border-color: rgba(0, 255, 127, 0.45); }
+
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .radar-core {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: rgba(0, 255, 127, 0.12);
+    border: 1px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    color: var(--accent);
+    box-shadow: 0 0 25px rgba(0, 255, 127, 0.3);
+  }
+
+  .radar-core svg { width: 18px; height: 18px; margin-bottom: 2px; }
+  .radar-core span { font-size: 7px; letter-spacing: 1px; font-weight: 700; }
+
+  .loader-step {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .loader-heading {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .loader-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .loader-timer {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 4px;
   }
 
-  .status-ok {
+  .loader-timer span { color: var(--accent); font-weight: 700; }
+
+  .loader-bottom-bar {
+    position: absolute;
+    bottom: 24px;
+    left: 20px;
+    right: 20px;
+    max-width: 740px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #0d1a14;
+    border: 1px solid var(--accent);
     color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 9px 16px;
+    border-radius: 30px;
+    opacity: 0;
+    transition: all 0.25s ease;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <div class="badge-dot"></div>
-      <h1>Egi<span>Xploit</span> Obfuscator</h1>
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="nav-icon">
+        <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+      </div>
+      <div class="nav-title">
+        <span>EGIXPLOIT</span>
+        <span>v3.0 B85-VM</span>
+      </div>
     </div>
-    <div class="version-tag">v2.1 HYBRID VM</div>
-  </header>
+    <div class="nav-status">
+      <span class="status-pulse"></span>
+      <span>AUTHORIZED SESSION</span>
+    </div>
+  </nav>
 
-  <div class="options-bar">
-    <label class="opt-item">
-      <input type="checkbox" id="optAntiHook" checked>
-      <span>Anti-Hook Shield</span>
-    </label>
-    <label class="opt-item">
-      <input type="checkbox" id="optUnicode" checked>
-      <span>Braille & Decoys</span>
-    </label>
-    <label class="opt-item">
-      <input type="checkbox" id="optMiniVM" checked>
-      <span>Mini VM Wrapper</span>
-    </label>
-    <label class="opt-item">
-      <input type="checkbox" id="optStripComments" checked>
-      <span>Strip Comments</span>
-    </label>
+  <!-- Main Workspace -->
+  <main class="container">
+    <section class="hero">
+      <div class="hero-badge">
+        <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>EGIXPLOIT</span> // LUA OBFUSCATOR
+      </div>
+      <h1>Your code.<br><span class="highlight">Under protection.</span></h1>
+      <p>Turn readable Luau into protected output in one click. Paste your script, start obfuscation, and copy your result.</p>
+
+      <div class="feature-pills">
+        <label class="f-pill"><input type="checkbox" id="optAntiHook" checked> DEEP ANTI-HOOK</label>
+        <label class="f-pill"><input type="checkbox" id="optUnicode" checked> BRAILLE DECOYS</label>
+        <label class="f-pill"><input type="checkbox" id="optDynStrings" checked> MODULO STRINGS</label>
+        <label class="f-pill"><input type="checkbox" id="optStripComments" checked> STRIP COMMENTS</label>
+      </div>
+    </section>
+
+    <!-- Code Editor Card -->
+    <div class="editor-card">
+      <div class="editor-header">
+        <div class="file-info">
+          <div class="file-icon">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </div>
+          <div class="file-name">
+            <strong id="fileNameLabel">source.lua</strong>
+            <span>SOURCE EDITOR</span>
+          </div>
+        </div>
+        <div class="editor-stats">
+          <span id="lineCountLabel">4 lines</span>
+          <span>•</span>
+          <span id="byteCountLabel">51 B</span>
+          <span class="dot"></span>
+        </div>
+      </div>
+
+      <div class="code-area-wrap">
+        <div class="gutter" id="gutter">1
+2
+3
+4</div>
+        <textarea id="srcArea" spellcheck="false" oninput="updateEditorStats()" onscroll="syncGutter()">-- Paste your Lua code here...
+
+local message = "Hello, EgiXploit!"
+print(message)</textarea>
+      </div>
+
+      <div class="editor-footer">
+        <div class="left-tools">
+          <input type="file" id="fileInput" accept=".lua,.txt" style="display:none" onchange="handleFileUpload(event)">
+          <button class="tool-btn" onclick="document.getElementById('fileInput').click()">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Upload file
+          </button>
+          <button class="clear-btn" onclick="clearEditor()">Clear</button>
+        </div>
+        <button class="obfuscate-btn" onclick="startObfuscationFlow()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          Obfuscate now
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="sub-meta">
+      <span>ENCRYPTION RUNS ON THE VM ENGINE • OUTPUT APPEARS BELOW</span>
+      <div class="lang-tags">
+        <span>ACCEPTS</span>
+        <span class="lang-tag">.LUA</span>
+        <span class="lang-tag">.LUAU</span>
+        <span class="lang-tag">.TXT</span>
+      </div>
+    </div>
+
+    <!-- Output Box -->
+    <div class="output-section" id="outputSection">
+      <div class="output-header">
+        <div class="output-title">
+          <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>PROTECTED OUTPUT</span>
+          <span id="outMetaBadge" style="color:var(--muted);font-weight:400;">(0 B)</span>
+        </div>
+        <div class="output-actions">
+          <button class="tool-btn" onclick="copyOutput()">
+            <svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy
+          </button>
+          <button class="tool-btn" onclick="downloadOutput()">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download .lua
+          </button>
+        </div>
+      </div>
+      <textarea id="outArea" readonly spellcheck="false"></textarea>
+    </div>
+  </main>
+
+  <!-- Fullscreen Radar Loading Overlay -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="radar-box">
+      <div class="radar-ring r1"></div>
+      <div class="radar-ring r2"></div>
+      <div class="radar-ring r3"></div>
+      <div class="radar-core">
+        <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <span>B85 CORE</span>
+      </div>
+    </div>
+    <div class="loader-step" id="loaderStepText">SOURCE FRAGMENTATION</div>
+    <div class="loader-heading">Obfuscating your code.</div>
+    <div class="loader-sub">Your code is being protected in this session.</div>
+    <div class="loader-timer">ELAPSED <span id="elapsedTimer">00:00</span></div>
+
+    <div class="loader-bottom-bar">
+      <span id="loaderStatusFoot">WRAPPING IN VM LAYER...</span>
+      <span>EGIXPLOIT ENGINE v3.0</span>
+    </div>
   </div>
 
-  <div class="editor-card">
-    <div class="card-header">
-      <span class="title">SOURCE LUAU</span>
-      <span id="srcLines">1 LINE</span>
-    </div>
-    <div class="editor-body">
-      <div class="line-nums" id="lineNums">1</div>
-      <textarea id="srcArea" placeholder="-- Paste your Luau source code here..." oninput="updateLineNums()" onscroll="syncScroll()" spellcheck="false"></textarea>
-    </div>
-  </div>
-
-  <div class="actions">
-    <button class="btn-primary" onclick="runObfuscate()">OBFUSCATE SCRIPT</button>
-    <button onclick="copyOutput()">COPY OUTPUT</button>
-    <button onclick="downloadOutput()">DOWNLOAD .LUA</button>
-    <button class="btn-clear" style="grid-column: span 2;" onclick="clearAll()">CLEAR ALL</button>
-  </div>
-
-  <div class="editor-card">
-    <div class="card-header">
-      <span class="title">PROTECTED OUTPUT</span>
-      <span id="outSize">0 B</span>
-    </div>
-    <div class="editor-body" style="height: 200px;">
-      <textarea id="outArea" readonly placeholder="-- Protected script output will appear here..." spellcheck="false"></textarea>
-    </div>
-  </div>
-
-  <div class="status-bar">
-    <span id="statusText">Ready • EgiXploit Engine</span>
-    <span id="keyInfo">KEY: IDLE</span>
-  </div>
+  <div class="toast" id="toast">Copied!</div>
 
 <script>
-function updateLineNums() {
-  const ta = document.getElementById('srcArea');
-  const lines = ta.value.split('\n');
-  const count = lines.length;
-  document.getElementById('srcLines').textContent = count + ' LINE' + (count !== 1 ? 'S' : '');
-  const nums = new Array(count);
-  for (let i = 0; i < count; i++) nums[i] = i + 1;
-  document.getElementById('lineNums').textContent = nums.join('\n');
-  syncScroll();
+let toastTimeout;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-function syncScroll() {
-  const ta = document.getElementById('srcArea');
-  const ln = document.getElementById('lineNums');
-  ln.scrollTop = ta.scrollTop;
+function updateEditorStats() {
+  const val = document.getElementById('srcArea').value;
+  const lines = val.split('\n').length;
+  const bytes = new TextEncoder().encode(val).length;
+
+  document.getElementById('lineCountLabel').textContent = lines + (lines === 1 ? ' line' : ' lines');
+  document.getElementById('byteCountLabel').textContent = formatBytes(bytes);
+
+  const nums = [];
+  for (let i = 1; i <= lines; i++) nums.push(i);
+  document.getElementById('gutter').textContent = nums.join('\n');
+  syncGutter();
 }
 
+function syncGutter() {
+  document.getElementById('gutter').scrollTop = document.getElementById('srcArea').scrollTop;
+}
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('fileNameLabel').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('srcArea').value = ev.target.result;
+    updateEditorStats();
+    showToast('Loaded ' + file.name);
+  };
+  reader.readAsText(file);
+}
+
+function clearEditor() {
+  document.getElementById('srcArea').value = '';
+  document.getElementById('fileNameLabel').textContent = 'source.lua';
+  document.getElementById('outputSection').classList.remove('active');
+  updateEditorStats();
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+/* ================= OBFUSCATOR ENGINE v3.0 ================= */
 function randIdent(len = 6) {
-  const first = '_';
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
-  let res = first + chars[Math.floor(Math.random() * 52)];
-  for (let i = 2; i < len; i++) {
-    res += chars[Math.floor(Math.random() * chars.length)];
-  }
+  const alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
+  let res = '_' + alpha[Math.floor(Math.random() * alpha.length)];
+  for (let i = 2; i < len; i++) res += chars[Math.floor(Math.random() * chars.length)];
   return res;
 }
 
+function toHexNum(n) { return '0x' + n.toString(16); }
+
 function genBrailleDecoy(len = 28) {
   let out = '';
-  for (let i = 0; i < len; i++) {
-    const code = 0x2800 + Math.floor(Math.random() * 255);
-    out += String.fromCharCode(code);
-  }
+  for (let i = 0; i < len; i++) out += String.fromCharCode(0x2800 + Math.floor(Math.random() * 255));
   return out;
 }
 
 function genBoxDecoy(len = 24) {
   const pool = '▰┏┪为┘│⡈►┏▤丱⡎为⡸┄┒◔丰丙⡲丽▧丢▦⡚东◘⡏丘┩⡸三◞└┟⡩▦▤┹┦◇⡟⡹⡮丠';
   let out = '';
-  for (let i = 0; i < len; i++) {
-    out += pool[Math.floor(Math.random() * pool.length)];
-  }
+  for (let i = 0; i < len; i++) out += pool[Math.floor(Math.random() * pool.length)];
   return out;
 }
 
-function stripLuaComments(code) {
+function generateShuffledBase85Alphabet() {
+  const baseChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
+  let arr = baseChars.split('');
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.join('');
+}
+
+function encodeCustomBase85(bytes, alphabet) {
+  const origLen = bytes.length;
+  const padLen = (4 - (origLen % 4)) % 4;
+  const padded = new Uint8Array(origLen + padLen);
+  padded.set(bytes);
+
   let out = '';
-  let i = 0;
-  const n = code.length;
+  for (let i = 0; i < padded.length; i += 4) {
+    let val = ((padded[i] << 24) >>> 0) + ((padded[i + 1] << 16) >>> 0) + ((padded[i + 2] << 8) >>> 0) + (padded[i + 3] >>> 0);
+    let chunk = new Array(5);
+    for (let j = 4; j >= 0; j--) {
+      chunk[j] = alphabet[val % 85];
+      val = Math.floor(val / 85);
+    }
+    out += chunk.join('');
+  }
+  return { encoded: out, origLen: origLen };
+}
+
+function buildModuloStringExpr(str, fnCharIdent) {
+  const key = Math.floor(Math.random() * 190) + 23;
+  const step = Math.floor(Math.random() * 19) + 5;
+  let args = [];
+  for (let i = 0; i < str.length; i++) {
+    args.push(toHexNum((str.charCodeAt(i) + key + (i * step)) % 256));
+  }
+  return `${fnCharIdent}({${args.join(',')}},${toHexNum(key)},${toHexNum(step)})`;
+}
+
+function stripLuaComments(code) {
+  let out = '', i = 0, n = code.length;
   while (i < n) {
     if (code[i] === '"' || code[i] === "'") {
-      const q = code[i];
-      out += q;
-      i++;
+      const q = code[i]; out += q; i++;
       while (i < n) {
-        if (code[i] === '\\' && i + 1 < n) {
-          out += code[i] + code[i + 1];
-          i += 2;
-        } else if (code[i] === q) {
-          out += q;
-          i++;
-          break;
-        } else {
-          out += code[i++];
-        }
+        if (code[i] === '\\' && i + 1 < n) { out += code[i] + code[i + 1]; i += 2; }
+        else if (code[i] === q) { out += q; i++; break; }
+        else out += code[i++];
       }
     } else if (code[i] === '[' && (code[i + 1] === '[' || code[i + 1] === '=')) {
-      let eq = 0;
-      let j = i + 1;
+      let eq = 0, j = i + 1;
       while (code[j] === '=') { eq++; j++; }
       if (code[j] === '[') {
         const closeTag = ']' + '='.repeat(eq) + ']';
         const endIdx = code.indexOf(closeTag, j + 1);
-        if (endIdx !== -1) {
-          out += code.slice(i, endIdx + closeTag.length);
-          i = endIdx + closeTag.length;
-          continue;
-        }
+        if (endIdx !== -1) { out += code.slice(i, endIdx + closeTag.length); i = endIdx + closeTag.length; continue; }
       }
       out += code[i++];
     } else if (code[i] === '-' && code[i + 1] === '-') {
       if (code[i + 2] === '[') {
-        let eq = 0;
-        let j = i + 3;
+        let eq = 0, j = i + 3;
         while (code[j] === '=') { eq++; j++; }
         if (code[j] === '[') {
           const closeTag = ']' + '='.repeat(eq) + ']';
           const endIdx = code.indexOf(closeTag, j + 1);
-          if (endIdx !== -1) {
-            i = endIdx + closeTag.length;
-            continue;
-          }
+          if (endIdx !== -1) { i = endIdx + closeTag.length; continue; }
         }
       }
       while (i < n && code[i] !== '\n') i++;
@@ -389,190 +913,173 @@ function stripLuaComments(code) {
   return out;
 }
 
-function runObfuscate() {
+function generateProtectedLua() {
   const srcInput = document.getElementById('srcArea').value;
-  if (!srcInput.trim()) {
-    setStatus('Error: Source code is empty!', true);
-    return;
-  }
-
   const useAntiHook = document.getElementById('optAntiHook').checked;
   const useUnicode = document.getElementById('optUnicode').checked;
-  const useMiniVM = document.getElementById('optMiniVM').checked;
+  const useDynStrings = document.getElementById('optDynStrings').checked;
   const useStrip = document.getElementById('optStripComments').checked;
 
   let code = useStrip ? stripLuaComments(srcInput) : srcInput;
+  const rawBytes = new TextEncoder().encode(code);
 
-  const encoder = new TextEncoder();
-  const rawBytes = encoder.encode(code);
-
-  const masterKey = Math.floor(Math.random() * 200) + 33;
-  const saltStep = Math.floor(Math.random() * 17) + 3;
+  const masterKey = Math.floor(Math.random() * 210) + 27;
+  const saltStep = Math.floor(Math.random() * 23) + 5;
+  const xorSalt = Math.floor(Math.random() * 120) + 11;
   const modConst = 251;
 
-  const encryptedHex = new Array(rawBytes.length);
+  const xoredBytes = new Uint8Array(rawBytes.length);
   for (let i = 0; i < rawBytes.length; i++) {
-    const k = (masterKey + ((i + 1) * saltStep)) % modConst;
-    const enc = (rawBytes[i] ^ k) & 0xFF;
-    encryptedHex[i] = enc.toString(16).padStart(2, '0');
+    const k = ((masterKey + ((i + 1) * saltStep)) ^ xorSalt) % modConst;
+    xoredBytes[i] = (rawBytes[i] ^ k) & 0xFF;
   }
 
-  const hexPayload = encryptedHex.join('');
+  const alphabet = generateShuffledBase85Alphabet();
+  const { encoded: b85Payload, origLen } = encodeCustomBase85(xoredBytes, alphabet);
 
-  const vRoot = randIdent(5);
-  const vTrap = randIdent(6);
-  const vRefs = randIdent(5);
-  const vPool = randIdent(6);
-  const vDec = randIdent(6);
-  const vBuf = randIdent(5);
-  const vIdx = randIdent(4);
-  const vKey = randIdent(5);
-  const vOp = randIdent(4);
-  const vPc = randIdent(4);
-  const vReg = randIdent(5);
-  const vExec = randIdent(6);
+  const vEntry = randIdent(6), vTrap = randIdent(6), vStrBuilder = randIdent(6);
+  const vEnv = randIdent(5), vSys = randIdent(6), vAlphaMap = randIdent(6);
+  const vPool = randIdent(6), vB85Dec = randIdent(6), vXorDec = randIdent(6);
+  const vPc = randIdent(5), vReg = randIdent(5), vOp = randIdent(5);
 
-  const opInit = Math.floor(Math.random() * 20) + 10;
-  const opDecrypt = opInit + Math.floor(Math.random() * 15) + 5;
-  const opCompile = opDecrypt + Math.floor(Math.random() * 15) + 5;
-  const opRun = opCompile + Math.floor(Math.random() * 15) + 5;
+  const stBoot = Math.floor(Math.random() * 50) + 0x1A;
+  const stVerify = stBoot + Math.floor(Math.random() * 30) + 0x0F;
+  const stUnpackB85 = stVerify + Math.floor(Math.random() * 30) + 0x11;
+  const stDecryptXor = stUnpackB85 + Math.floor(Math.random() * 30) + 0x13;
+  const stLoadFn = stDecryptXor + Math.floor(Math.random() * 30) + 0x17;
+  const stExec = stLoadFn + Math.floor(Math.random() * 30) + 0x19;
+  const trapCode = toHexNum(Math.floor(Math.random() * 0x8FFF) + 0x1000);
 
   let parts = [];
-  parts.push(`-- Protected by EgiXploit Obfuscator v2.1\n`);
-  parts.push(`local ${vRoot};do `);
-  parts.push(`local function ${vTrap}()error("EgiXploit: Security Violation",0)end;`);
-  parts.push(`local ${vRefs}={string.sub,string.byte,string.char,bit32.bxor,tonumber,table.concat,(loadstring or load)};`);
+  parts.push(`-- Protected by EgiXploit Obfuscator v3.0\n`);
+  parts.push(`local ${vEntry};do `);
+  parts.push(`local function ${vTrap}()error(${trapCode},0)end;`);
+  parts.push(`local _c,_t=string.char,table.concat;`);
+  parts.push(`local function ${vStrBuilder}(a,k,s)local r={}for i=1,#a do r[i]=_c((a[i]-k-((i-1)*s))%256)end return _t(r)end;`);
+
+  const S = (str) => useDynStrings ? buildModuloStringExpr(str, vStrBuilder) : `"${str}"`;
+
+  parts.push(`local ${vEnv}=(getfenv and getfenv())or _ENV or _G;`);
+  parts.push(`local ${vSys}={[1]=${vEnv}[${S("string")}][${S("sub")}],[2]=${vEnv}[${S("string")}][${S("byte")}],[3]=_c,[4]=${vEnv}[${S("table")}][${S("concat")}],[5]=${vEnv}[${S("bit32")}]and ${vEnv}[${S("bit32")}][${S("bxor")}],[6]=${vEnv}[${S("loadstring")}]or ${vEnv}[${S("load")}],[7]=${vEnv}[${S("pcall")}],[8]=${vEnv}[${S("type")}],[9]=${vEnv}[${S("debug")}]and ${vEnv}[${S("debug")}][${S("getinfo")}]};`);
+  parts.push(`if not ${vSys}[5]then ${vSys}[5]=function(a,b)local r,m=0,1 while a>0 or b>0 do local x,y=a%2,b%2 if x~=y then r=r+m end a=(a-x)/2 b=(b-y)/2 m=m*2 end return r end end;`);
 
   if (useAntiHook) {
-    parts.push(`if type(${vRefs}[1])~="function" or type(${vRefs}[3])~="function" or type(${vRefs}[4])~="function" or type(${vRefs}[7])~="function" then ${vTrap}() end;`);
-    parts.push(`if ${vRefs}[4](14,13)~=3 or ${vRefs}[3](65)~="A" then ${vTrap}() end;`);
+    parts.push(`if ${vSys}[8](${vSys}[6])~=${S("function")}or ${vSys}[8](${vSys}[3])~=${S("function")}then ${vTrap}()end;`);
+    parts.push(`if ${vSys}[5](0x1D,0x0E)~=0x13 or ${vSys}[3](0x45)~=${S("E")}then ${vTrap}()end;`);
+    parts.push(`if ${vSys}[9]then local _ok,_inf=${vSys}[7](${vSys}[9],${vSys}[6]);if _ok and _inf and _inf.what and _inf.what~=${S("C")}then ${vTrap}()end end;`);
+    parts.push(`local _hOk=${vSys}[7](${vSys}[6],${S("return 1")});if not _hOk then ${vTrap}()end;`);
   }
 
   if (useUnicode) {
-    const d1 = randIdent(9);
-    const d2 = randIdent(9);
-    const kBraille = genBrailleDecoy(32);
-    const kBox = genBoxDecoy(26);
-    parts.push(`local ${d1}={[=[${kBraille}]=]};local ${d2}="${kBox}";`);
+    parts.push(`local ${randIdent(8)}={[=[${genBrailleDecoy(34)}]=]};local ${randIdent(8)}="${genBoxDecoy(28)}";`);
   }
 
-  const poolKeys = {
-    b1: genBrailleDecoy(8),
-    b2: genBoxDecoy(8),
-    b3: genBrailleDecoy(6)
-  };
+  parts.push(`local ${vAlphaMap}={};do local _a="${alphabet}";for i=1,85 do ${vAlphaMap}[${vSys}[2](_a,i)]=i-1 end end;`);
 
-  parts.push(`local ${vPool}={`);
-  parts.push(`["${poolKeys.b1}"]="${hexPayload}",`);
-  parts.push(`["${poolKeys.b2}"]=${masterKey},`);
-  parts.push(`["${poolKeys.b3}"]=${saltStep}`);
-  parts.push(`};`);
+  const kPayload = genBrailleDecoy(7), kMaster = genBoxDecoy(7), kStep = genBrailleDecoy(6), kSalt = genBoxDecoy(6), kLen = genBrailleDecoy(5);
+  parts.push(`local ${vPool}={["${kPayload}"]="${b85Payload}",["${kMaster}"]=${toHexNum(masterKey)},["${kStep}"]=${toHexNum(saltStep)},["${kSalt}"]=${toHexNum(xorSalt)},["${kLen}"]=${toHexNum(origLen)}};`);
 
-  parts.push(`local function ${vDec}(_h,_m,_s)local ${vBuf}={};local ${vIdx}=1;for i=1,#_h,2 do local _b=${vRefs}[5](${vRefs}[1](_h,i,i+1),16);if not _b then ${vTrap}()end;local ${vKey}=(_m+(${vIdx}*_s))%${modConst};${vBuf}[${vIdx}]=${vRefs}[3](${vRefs}[4](_b,${vKey}));${vIdx}=${vIdx}+1 end;return ${vRefs}[6](${vBuf})end;`);
+  parts.push(`local function ${vB85Dec}(_s,_lim)local _o,_n={},1 for i=1,#_s,5 do local c1,c2,c3,c4,c5=${vAlphaMap}[${vSys}[2](_s,i)],${vAlphaMap}[${vSys}[2](_s,i+1)],${vAlphaMap}[${vSys}[2](_s,i+2)],${vAlphaMap}[${vSys}[2](_s,i+3)],${vAlphaMap}[${vSys}[2](_s,i+4)]if not(c1 and c2 and c3 and c4 and c5)then ${vTrap}()end local v=(((c1*85+c2)*85+c3)*85+c4)*85+c5 if _n<=_lim then _o[_n]=math.floor(v/16777216)%256;_n=_n+1 end if _n<=_lim then _o[_n]=math.floor(v/65536)%256;_n=_n+1 end if _n<=_lim then _o[_n]=math.floor(v/256)%256;_n=_n+1 end if _n<=_lim then _o[_n]=v%256;_n=_n+1 end end return _o end;`);
+  parts.push(`local function ${vXorDec}(_arr,_m,_st,_sl)local _b={}for i=1,#_arr do local _k=(${vSys}[5](_m+(i*_st),_sl))%${toHexNum(modConst)};_b[i]=${vSys}[3](${vSys}[5](_arr[i],_k))end return ${vSys}[4](_b)end;`);
 
-  if (useMiniVM) {
-    parts.push(`${vRoot}=function(...)local ${vPc}=${opInit};local ${vReg}={};while true do local ${vOp}=${vPc};`);
-    parts.push(`if ${vOp}==${opInit} then ${vReg}[1]=${vPool}["${poolKeys.b1}"];${vReg}[2]=${vPool}["${poolKeys.b2}"];${vReg}[3]=${vPool}["${poolKeys.b3}"];${vPc}=${opDecrypt};`);
-    parts.push(`elseif ${vOp}==${opDecrypt} then ${vReg}[4]=${vDec}(${vReg}[1],${vReg}[2],${vReg}[3]);${vReg}[1]=nil;${vPc}=${opCompile};`);
-    parts.push(`elseif ${vOp}==${opCompile} then local ${vExec},_err=${vRefs}[7](${vReg}[4]);${vReg}[4]=nil;if type(${vExec})~="function"then error(tostring(_err),0)end;${vReg}[5]=${vExec};${vPc}=${opRun};`);
-    parts.push(`elseif ${vOp}==${opRun} then return ${vReg}[5](...) else ${vTrap}() end end end;`);
-  } else {
-    parts.push(`${vRoot}=function(...)local _s=${vDec}(${vPool}["${poolKeys.b1}"],${vPool}["${poolKeys.b2}"],${vPool}["${poolKeys.b3}"]);local _f,_err=${vRefs}[7](_s);if type(_f)~="function"then error(tostring(_err),0)end;return _f(...)end;`);
+  parts.push(`${vEntry}=function(...)local ${vPc}=${toHexNum(stBoot)};local ${vReg}={};while true do local ${vOp}=${vPc};`);
+  parts.push(`if ${vOp}==${toHexNum(stBoot)} then ${vReg}[1]=${vPool}["${kPayload}"];${vReg}[2]=${vPool}["${kLen}"];${vPc}=${toHexNum(stVerify)};`);
+  parts.push(`elseif ${vOp}==${toHexNum(stVerify)} then ${vReg}[3]=${vPool}["${kMaster}"];${vReg}[4]=${vPool}["${kStep}"];${vReg}[5]=${vPool}["${kSalt}"];${vPc}=${toHexNum(stUnpackB85)};`);
+  parts.push(`elseif ${vOp}==${toHexNum(stUnpackB85)} then ${vReg}[6]=${vB85Dec}(${vReg}[1],${vReg}[2]);${vReg}[1]=nil;${vPc}=${toHexNum(stDecryptXor)};`);
+  parts.push(`elseif ${vOp}==${toHexNum(stDecryptXor)} then ${vReg}[7]=${vXorDec}(${vReg}[6],${vReg}[3],${vReg}[4],${vReg}[5]);${vReg}[6]=nil;${vPc}=${toHexNum(stLoadFn)};`);
+  parts.push(`elseif ${vOp}==${toHexNum(stLoadFn)} then local _fn,_er=${vSys}[6](${vReg}[7]);${vReg}[7]=nil;if ${vSys}[8](_fn)~=${S("function")}then error(tostring(_er),0)end;${vReg}[8]=_fn;${vPc}=${toHexNum(stExec)};`);
+  parts.push(`elseif ${vOp}==${toHexNum(stExec)} then return ${vReg}[8](...)else ${vTrap}()end end end;`);
+  parts.push(`end;return ${vEntry}(...)`);
+
+  return parts.join('');
+}
+
+function startObfuscationFlow() {
+  const src = document.getElementById('srcArea').value;
+  if (!src.trim()) {
+    showToast('Please paste or upload a Lua script first.');
+    return;
   }
 
-  parts.push(`end;return ${vRoot}(...)`);
+  const overlay = document.getElementById('loaderOverlay');
+  const stepEl = document.getElementById('loaderStepText');
+  const footEl = document.getElementById('loaderStatusFoot');
+  const timerEl = document.getElementById('elapsedTimer');
 
-  const finalResult = parts.join('');
-  const outArea = document.getElementById('outArea');
-  outArea.value = finalResult;
+  overlay.classList.add('active');
+  let seconds = 0;
+  timerEl.textContent = '00:00';
 
-  const byteSize = new TextEncoder().encode(finalResult).length;
-  document.getElementById('outSize').textContent = formatBytes(byteSize);
-  document.getElementById('keyInfo').textContent = `KEY: 0x${masterKey.toString(16).toUpperCase()} | STEP: ${saltStep}`;
-  setStatus('Obfuscation complete • EgiXploit v2.1 Ready', false);
-}
+  const steps = [
+    { step: 'SOURCE FRAGMENTATION', foot: 'STRIPPING AST & COMMENTS...' },
+    { step: 'ROLLING XOR + BASE85', foot: 'ENCRYPTING BYTECODE PAYLOAD...' },
+    { step: 'VM VIRTUALIZATION', foot: 'WRAPPING IN VM LAYER...' }
+  ];
 
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(2) + ' MB';
-}
+  stepEl.textContent = steps[0].step;
+  footEl.textContent = steps[0].foot;
 
-function setStatus(msg, isErr) {
-  const el = document.getElementById('statusText');
-  el.textContent = msg;
-  el.className = isErr ? '' : 'status-ok';
-  el.style.color = isErr ? 'var(--danger)' : '';
+  const timerInt = setInterval(() => {
+    seconds++;
+    const s = seconds < 10 ? '0' + seconds : seconds;
+    timerEl.textContent = '00:' + s;
+    if (seconds === 1) {
+      stepEl.textContent = steps[1].step;
+      footEl.textContent = steps[1].foot;
+    } else if (seconds >= 2) {
+      stepEl.textContent = steps[2].step;
+      footEl.textContent = steps[2].foot;
+    }
+  }, 650);
+
+  setTimeout(() => {
+    clearInterval(timerInt);
+    const result = generateProtectedLua();
+    const outBox = document.getElementById('outArea');
+    outBox.value = result;
+
+    const outBytes = new TextEncoder().encode(result).length;
+    document.getElementById('outMetaBadge').textContent = `(${formatBytes(outBytes)})`;
+
+    overlay.classList.remove('active');
+    const outSec = document.getElementById('outputSection');
+    outSec.classList.add('active');
+    outSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    showToast('Protection complete');
+  }, 1950);
 }
 
 function copyOutput() {
   const out = document.getElementById('outArea');
-  if (!out.value) {
-    setStatus('Error: No output to copy!', true);
-    return;
-  }
+  if (!out.value) return;
   out.select();
   out.setSelectionRange(0, 9999999);
   try {
-    const ok = document.execCommand('copy');
-    if (ok) {
-      setStatus('Copied to clipboard!', false);
+    if (document.execCommand('copy')) {
+      showToast('Copied to clipboard');
       return;
     }
   } catch (e) {}
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(out.value).then(() => {
-      setStatus('Copied to clipboard!', false);
-    }).catch(() => {
-      setStatus('Select all & copy manually from Output box.', true);
-    });
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(out.value).then(() => showToast('Copied to clipboard'));
   }
 }
 
 function downloadOutput() {
   const val = document.getElementById('outArea').value;
-  if (!val) {
-    setStatus('Error: Nothing to download!', true);
-    return;
-  }
-
-  const fileName = 'EgiXploit_Protected.lua';
-
-  try {
-    const blob = new Blob([val], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 1000);
-
-    setStatus('Downloading ' + fileName + '...', false);
-  } catch (e) {
-    const a = document.createElement('a');
-    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(val);
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
+  if (!val) return;
+  const blob = new Blob([val], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'EgiXploit_Protected.lua';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
     document.body.removeChild(a);
-    setStatus('Downloaded ' + fileName + '!', false);
-  }
-}
-
-function clearAll() {
-  document.getElementById('srcArea').value = '';
-  document.getElementById('outArea').value = '';
-  document.getElementById('outSize').textContent = '0 B';
-  document.getElementById('keyInfo').textContent = 'KEY: IDLE';
-  updateLineNums();
-  setStatus('Cleared • Ready', false);
+    URL.revokeObjectURL(url);
+  }, 800);
+  showToast('Downloading EgiXploit_Protected.lua');
 }
 </script>
 </body>
