@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EgiXploit Obfuscator v2.1</title>
+<style>
+  :root {
+    --bg: #080d0a;
+    --panel: #0d1611;
+    --panel2: #111e17;
+    --border: #1a3326;
+    --border2: #244735;
+    --accent: #00ff7f;
+    --accent-dim: rgba(0, 255, 127, 0.12);
+    --text: #e2f5ea;
+    --muted: #6e947f;
+    --danger: #ff4d6d;
+    --mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 20px rgba(0, 255, 127, 0.05);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .brand h1 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+  }
+
+  .brand span {
+    color: var(--accent);
+  }
+
+  .version-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--border2);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .options-bar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .opt-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .opt-item input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 15px;
+    height: 15px;
+  }
+
+  .editor-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--panel2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .card-header .title {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.6px;
+  }
+
+  .editor-body {
+    display: flex;
+    height: 220px;
+    position: relative;
+    background: #070b09;
+  }
+
+  .line-nums {
+    width: 38px;
+    padding: 12px 6px;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: #3c5c4b;
+    background: #0a100d;
+    border-right: 1px solid var(--border);
+    user-select: none;
+    overflow: hidden;
+    white-space: pre;
+  }
+
+  textarea {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 12px;
+    tab-size: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--panel2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  button:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary {
+    grid-column: span 2;
+    background: var(--accent);
+    color: #04140b;
+    border: none;
+    font-weight: 700;
+    box-shadow: 0 0 15px rgba(0, 255, 127, 0.25);
+  }
+
+  .btn-clear {
+    color: var(--danger);
+    border-color: rgba(255, 77, 109, 0.3);
+  }
+
+  .status-bar {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 4px;
+  }
+
+  .status-ok {
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="badge-dot"></div>
+      <h1>Egi<span>Xploit</span> Obfuscator</h1>
+    </div>
+    <div class="version-tag">v2.1 HYBRID VM</div>
+  </header>
+
+  <div class="options-bar">
+    <label class="opt-item">
+      <input type="checkbox" id="optAntiHook" checked>
+      <span>Anti-Hook Shield</span>
+    </label>
+    <label class="opt-item">
+      <input type="checkbox" id="optUnicode" checked>
+      <span>Braille & Decoys</span>
+    </label>
+    <label class="opt-item">
+      <input type="checkbox" id="optMiniVM" checked>
+      <span>Mini VM Wrapper</span>
+    </label>
+    <label class="opt-item">
+      <input type="checkbox" id="optStripComments" checked>
+      <span>Strip Comments</span>
+    </label>
+  </div>
+
+  <div class="editor-card">
+    <div class="card-header">
+      <span class="title">SOURCE LUAU</span>
+      <span id="srcLines">1 LINE</span>
+    </div>
+    <div class="editor-body">
+      <div class="line-nums" id="lineNums">1</div>
+      <textarea id="srcArea" placeholder="-- Paste your Luau source code here..." oninput="updateLineNums()" onscroll="syncScroll()" spellcheck="false"></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" onclick="runObfuscate()">OBFUSCATE SCRIPT</button>
+    <button onclick="copyOutput()">COPY OUTPUT</button>
+    <button onclick="downloadOutput()">DOWNLOAD .LUA</button>
+    <button class="btn-clear" style="grid-column: span 2;" onclick="clearAll()">CLEAR ALL</button>
+  </div>
+
+  <div class="editor-card">
+    <div class="card-header">
+      <span class="title">PROTECTED OUTPUT</span>
+      <span id="outSize">0 B</span>
+    </div>
+    <div class="editor-body" style="height: 200px;">
+      <textarea id="outArea" readonly placeholder="-- Protected script output will appear here..." spellcheck="false"></textarea>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span id="statusText">Ready • EgiXploit Engine</span>
+    <span id="keyInfo">KEY: IDLE</span>
+  </div>
+
+<script>
+function updateLineNums() {
+  const ta = document.getElementById('srcArea');
+  const lines = ta.value.split('\n');
+  const count = lines.length;
+  document.getElementById('srcLines').textContent = count + ' LINE' + (count !== 1 ? 'S' : '');
+  const nums = new Array(count);
+  for (let i = 0; i < count; i++) nums[i] = i + 1;
+  document.getElementById('lineNums').textContent = nums.join('\n');
+  syncScroll();
+}
+
+function syncScroll() {
+  const ta = document.getElementById('srcArea');
+  const ln = document.getElementById('lineNums');
+  ln.scrollTop = ta.scrollTop;
+}
+
+function randIdent(len = 6) {
+  const first = '_';
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+  let res = first + chars[Math.floor(Math.random() * 52)];
+  for (let i = 2; i < len; i++) {
+    res += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return res;
+}
+
+function genBrailleDecoy(len = 28) {
+  let out = '';
+  for (let i = 0; i < len; i++) {
+    const code = 0x2800 + Math.floor(Math.random() * 255);
+    out += String.fromCharCode(code);
+  }
+  return out;
+}
+
+function genBoxDecoy(len = 24) {
+  const pool = '▰┏┪为┘│⡈►┏▤丱⡎为⡸┄┒◔丰丙⡲丽▧丢▦⡚东◘⡏丘┩⡸三◞└┟⡩▦▤┹┦◇⡟⡹⡮丠';
+  let out = '';
+  for (let i = 0; i < len; i++) {
+    out += pool[Math.floor(Math.random() * pool.length)];
+  }
+  return out;
+}
+
+function stripLuaComments(code) {
+  let out = '';
+  let i = 0;
+  const n = code.length;
+  while (i < n) {
+    if (code[i] === '"' || code[i] === "'") {
+      const q = code[i];
+      out += q;
+      i++;
+      while (i < n) {
+        if (code[i] === '\\' && i + 1 < n) {
+          out += code[i] + code[i + 1];
+          i += 2;
+        } else if (code[i] === q) {
+          out += q;
+          i++;
+          break;
+        } else {
+          out += code[i++];
+        }
+      }
+    } else if (code[i] === '[' && (code[i + 1] === '[' || code[i + 1] === '=')) {
+      let eq = 0;
+      let j = i + 1;
+      while (code[j] === '=') { eq++; j++; }
+      if (code[j] === '[') {
+        const closeTag = ']' + '='.repeat(eq) + ']';
+        const endIdx = code.indexOf(closeTag, j + 1);
+        if (endIdx !== -1) {
+          out += code.slice(i, endIdx + closeTag.length);
+          i = endIdx + closeTag.length;
+          continue;
+        }
+      }
+      out += code[i++];
+    } else if (code[i] === '-' && code[i + 1] === '-') {
+      if (code[i + 2] === '[') {
+        let eq = 0;
+        let j = i + 3;
+        while (code[j] === '=') { eq++; j++; }
+        if (code[j] === '[') {
+          const closeTag = ']' + '='.repeat(eq) + ']';
+          const endIdx = code.indexOf(closeTag, j + 1);
+          if (endIdx !== -1) {
+            i = endIdx + closeTag.length;
+            continue;
+          }
+        }
+      }
+      while (i < n && code[i] !== '\n') i++;
+    } else {
+      out += code[i++];
+    }
+  }
+  return out;
+}
+
+function runObfuscate() {
+  const srcInput = document.getElementById('srcArea').value;
+  if (!srcInput.trim()) {
+    setStatus('Error: Source code is empty!', true);
+    return;
+  }
+
+  const useAntiHook = document.getElementById('optAntiHook').checked;
+  const useUnicode = document.getElementById('optUnicode').checked;
+  const useMiniVM = document.getElementById('optMiniVM').checked;
+  const useStrip = document.getElementById('optStripComments').checked;
+
+  let code = useStrip ? stripLuaComments(srcInput) : srcInput;
+
+  const encoder = new TextEncoder();
+  const rawBytes = encoder.encode(code);
+
+  const masterKey = Math.floor(Math.random() * 200) + 33;
+  const saltStep = Math.floor(Math.random() * 17) + 3;
+  const modConst = 251;
+
+  const encryptedHex = new Array(rawBytes.length);
+  for (let i = 0; i < rawBytes.length; i++) {
+    const k = (masterKey + ((i + 1) * saltStep)) % modConst;
+    const enc = (rawBytes[i] ^ k) & 0xFF;
+    encryptedHex[i] = enc.toString(16).padStart(2, '0');
+  }
+
+  const hexPayload = encryptedHex.join('');
+
+  const vRoot = randIdent(5);
+  const vTrap = randIdent(6);
+  const vRefs = randIdent(5);
+  const vPool = randIdent(6);
+  const vDec = randIdent(6);
+  const vBuf = randIdent(5);
+  const vIdx = randIdent(4);
+  const vKey = randIdent(5);
+  const vOp = randIdent(4);
+  const vPc = randIdent(4);
+  const vReg = randIdent(5);
+  const vExec = randIdent(6);
+
+  const opInit = Math.floor(Math.random() * 20) + 10;
+  const opDecrypt = opInit + Math.floor(Math.random() * 15) + 5;
+  const opCompile = opDecrypt + Math.floor(Math.random() * 15) + 5;
+  const opRun = opCompile + Math.floor(Math.random() * 15) + 5;
+
+  let parts = [];
+  parts.push(`-- Protected by EgiXploit Obfuscator v2.1\n`);
+  parts.push(`local ${vRoot};do `);
+  parts.push(`local function ${vTrap}()error("EgiXploit: Security Violation",0)end;`);
+  parts.push(`local ${vRefs}={string.sub,string.byte,string.char,bit32.bxor,tonumber,table.concat,(loadstring or load)};`);
+
+  if (useAntiHook) {
+    parts.push(`if type(${vRefs}[1])~="function" or type(${vRefs}[3])~="function" or type(${vRefs}[4])~="function" or type(${vRefs}[7])~="function" then ${vTrap}() end;`);
+    parts.push(`if ${vRefs}[4](14,13)~=3 or ${vRefs}[3](65)~="A" then ${vTrap}() end;`);
+  }
+
+  if (useUnicode) {
+    const d1 = randIdent(9);
+    const d2 = randIdent(9);
+    const kBraille = genBrailleDecoy(32);
+    const kBox = genBoxDecoy(26);
+    parts.push(`local ${d1}={[=[${kBraille}]=]};local ${d2}="${kBox}";`);
+  }
+
+  const poolKeys = {
+    b1: genBrailleDecoy(8),
+    b2: genBoxDecoy(8),
+    b3: genBrailleDecoy(6)
+  };
+
+  parts.push(`local ${vPool}={`);
+  parts.push(`["${poolKeys.b1}"]="${hexPayload}",`);
+  parts.push(`["${poolKeys.b2}"]=${masterKey},`);
+  parts.push(`["${poolKeys.b3}"]=${saltStep}`);
+  parts.push(`};`);
+
+  parts.push(`local function ${vDec}(_h,_m,_s)local ${vBuf}={};local ${vIdx}=1;for i=1,#_h,2 do local _b=${vRefs}[5](${vRefs}[1](_h,i,i+1),16);if not _b then ${vTrap}()end;local ${vKey}=(_m+(${vIdx}*_s))%${modConst};${vBuf}[${vIdx}]=${vRefs}[3](${vRefs}[4](_b,${vKey}));${vIdx}=${vIdx}+1 end;return ${vRefs}[6](${vBuf})end;`);
+
+  if (useMiniVM) {
+    parts.push(`${vRoot}=function(...)local ${vPc}=${opInit};local ${vReg}={};while true do local ${vOp}=${vPc};`);
+    parts.push(`if ${vOp}==${opInit} then ${vReg}[1]=${vPool}["${poolKeys.b1}"];${vReg}[2]=${vPool}["${poolKeys.b2}"];${vReg}[3]=${vPool}["${poolKeys.b3}"];${vPc}=${opDecrypt};`);
+    parts.push(`elseif ${vOp}==${opDecrypt} then ${vReg}[4]=${vDec}(${vReg}[1],${vReg}[2],${vReg}[3]);${vReg}[1]=nil;${vPc}=${opCompile};`);
+    parts.push(`elseif ${vOp}==${opCompile} then local ${vExec},_err=${vRefs}[7](${vReg}[4]);${vReg}[4]=nil;if type(${vExec})~="function"then error(tostring(_err),0)end;${vReg}[5]=${vExec};${vPc}=${opRun};`);
+    parts.push(`elseif ${vOp}==${opRun} then return ${vReg}[5](...) else ${vTrap}() end end end;`);
+  } else {
+    parts.push(`${vRoot}=function(...)local _s=${vDec}(${vPool}["${poolKeys.b1}"],${vPool}["${poolKeys.b2}"],${vPool}["${poolKeys.b3}"]);local _f,_err=${vRefs}[7](_s);if type(_f)~="function"then error(tostring(_err),0)end;return _f(...)end;`);
+  }
+
+  parts.push(`end;return ${vRoot}(...)`);
+
+  const finalResult = parts.join('');
+  const outArea = document.getElementById('outArea');
+  outArea.value = finalResult;
+
+  const byteSize = new TextEncoder().encode(finalResult).length;
+  document.getElementById('outSize').textContent = formatBytes(byteSize);
+  document.getElementById('keyInfo').textContent = `KEY: 0x${masterKey.toString(16).toUpperCase()} | STEP: ${saltStep}`;
+  setStatus('Obfuscation complete • EgiXploit v2.1 Ready', false);
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+function setStatus(msg, isErr) {
+  const el = document.getElementById('statusText');
+  el.textContent = msg;
+  el.className = isErr ? '' : 'status-ok';
+  el.style.color = isErr ? 'var(--danger)' : '';
+}
+
+function copyOutput() {
+  const out = document.getElementById('outArea');
+  if (!out.value) {
+    setStatus('Error: No output to copy!', true);
+    return;
+  }
+  out.select();
+  out.setSelectionRange(0, 9999999);
+  try {
+    const ok = document.execCommand('copy');
+    if (ok) {
+      setStatus('Copied to clipboard!', false);
+      return;
+    }
+  } catch (e) {}
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(out.value).then(() => {
+      setStatus('Copied to clipboard!', false);
+    }).catch(() => {
+      setStatus('Select all & copy manually from Output box.', true);
+    });
+  }
+}
+
+function downloadOutput() {
+  const val = document.getElementById('outArea').value;
+  if (!val) {
+    setStatus('Error: Nothing to download!', true);
+    return;
+  }
+
+  const fileName = 'EgiXploit_Protected.lua';
+
+  try {
+    const blob = new Blob([val], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+    setStatus('Downloading ' + fileName + '...', false);
+  } catch (e) {
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(val);
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setStatus('Downloaded ' + fileName + '!', false);
+  }
+}
+
+function clearAll() {
+  document.getElementById('srcArea').value = '';
+  document.getElementById('outArea').value = '';
+  document.getElementById('outSize').textContent = '0 B';
+  document.getElementById('keyInfo').textContent = 'KEY: IDLE';
+  updateLineNums();
+  setStatus('Cleared • Ready', false);
+}
+</script>
+</body>
+</html>
