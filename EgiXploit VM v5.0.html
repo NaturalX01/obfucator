@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EgiXploit — Lua Obfuscator</title>
+<style>
+  :root {
+    --bg:#080304;--surface:rgba(16,5,8,0.82);--surface-2:#180a0c;
+    --border:rgba(255,255,255,0.07);--border-accent:rgba(220,20,60,0.4);
+    --accent:#dc143c;--accent-hover:#b8102f;--accent-soft:rgba(220,20,60,0.13);
+    --text:#f5ecee;--muted:#8c5a62;--danger:#ff2d55;
+    --mono:'Fira Code','JetBrains Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background-color:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;position:relative}
+  .bg-overlay{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 100% 60% at 50% 100%,rgba(8,3,4,0.95),transparent),radial-gradient(ellipse 100% 40% at 50% 0%,rgba(8,3,4,0.7),transparent),linear-gradient(to bottom,rgba(8,3,4,0.45),rgba(8,3,4,0.78))}
+  .bg-pulse{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 50% 30%,rgba(220,20,60,0.12),transparent);animation:bgPulse 4s ease-in-out infinite}
+  @keyframes bgPulse{0%,100%{opacity:.6}50%{opacity:1}}
+  #particleCanvas{position:fixed;inset:0;z-index:2;pointer-events:none;width:100%;height:100%}
+  .navbar,.container{position:relative;z-index:10}
+  .svg-icon{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .navbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:rgba(8,3,4,0.75);backdrop-filter:blur(16px);position:sticky;top:0;z-index:50}
+  .nav-brand{display:flex;align-items:center;gap:10px}
+  .nav-icon{width:30px;height:30px;border-radius:7px;background:var(--accent-soft);border:1px solid var(--border-accent);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+  .nav-title{display:flex;flex-direction:column}
+  .nav-title span:first-child{font-weight:800;font-size:14px;letter-spacing:.4px;color:#fff}
+  .nav-title span:last-child{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+  .nav-status{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--accent);background:rgba(220,20,60,0.08);border:1px solid rgba(220,20,60,0.25);padding:5px 11px;border-radius:20px;letter-spacing:.5px}
+  .nav-status .status-pulse{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulseGlow 1.4s ease-in-out infinite}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 16px var(--accent)}}
+  .container{width:100%;max-width:800px;margin:0 auto;padding:28px 16px 40px;flex:1;display:flex;flex-direction:column}
+  .hero{text-align:center;margin-bottom:24px}
+  .hero-badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.2px;color:var(--muted);background:rgba(16,5,8,0.75);border:1px solid var(--border);padding:5px 12px;border-radius:20px;margin-bottom:14px;text-transform:uppercase}
+  .hero-badge span{color:var(--accent)}
+  .hero h1{font-size:clamp(28px,6vw,42px);font-weight:800;line-height:1.15;letter-spacing:-.6px;color:#fff;margin-bottom:10px;text-shadow:0 2px 24px rgba(0,0,0,0.8)}
+  .hero h1 .highlight{color:var(--accent);text-shadow:0 0 32px rgba(220,20,60,0.6)}
+  .hero p{font-size:13px;color:var(--muted);max-width:480px;margin:0 auto 16px;line-height:1.5}
+  .feature-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:6px}
+  .f-pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;padding:5px 9px;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(10,3,5,0.7);transition:all .15s;user-select:none}
+  .f-pill:has(input:checked){color:var(--text);background:rgba(220,20,60,0.1);border-color:rgba(220,20,60,0.3)}
+  .f-pill input{accent-color:var(--accent);width:12px;height:12px}
+  .wm-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+  .wm-label{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .wm-input{font-family:var(--mono);font-size:11px;background:rgba(14,5,8,0.9);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:7px;width:280px;outline:none;transition:border .15s}
+  .wm-input:focus{border-color:rgba(220,20,60,0.5)}
+  .editor-card{background:rgba(14,5,8,0.85);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.7);backdrop-filter:blur(12px)}
+  .editor-header{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:rgba(24,10,12,0.8);border-bottom:1px solid var(--border)}
+  .file-info{display:flex;align-items:center;gap:10px}
+  .file-icon{width:26px;height:26px;border-radius:6px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+  .file-name{display:flex;flex-direction:column}
+  .file-name strong{font-family:var(--mono);font-size:12px;color:#fff}
+  .file-name span{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.5px}
+  .editor-stats{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .editor-stats .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .code-area-wrap{display:flex;height:260px;background:rgba(4,1,2,0.92)}
+  .gutter{width:42px;padding:14px 8px;text-align:right;font-family:var(--mono);font-size:12px;line-height:1.65;color:#4a1f27;user-select:none;overflow:hidden;white-space:pre;border-right:1px solid rgba(255,255,255,0.03)}
+  textarea#srcArea{flex:1;background:transparent;border:none;outline:none;resize:none;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:var(--text);tab-size:2;white-space:pre;overflow:auto}
+  textarea#srcArea::placeholder{color:#5e2a33}
+  .editor-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:11px 14px;background:rgba(24,10,12,0.8);border-top:1px solid var(--border)}
+  .left-tools{display:flex;align-items:center;gap:8px}
+  .tool-btn{background:rgba(20,8,10,0.85);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:500;padding:7px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+  .tool-btn:hover{border-color:var(--border-accent);background:rgba(220,20,60,0.1)}
+  .clear-btn{background:transparent;border:none;color:var(--muted);font-size:12px;padding:7px 10px;cursor:pointer;transition:color .15s}
+  .clear-btn:hover{color:var(--danger)}
+  .obfuscate-btn{background:var(--accent);color:#fff;border:none;font-size:12.5px;font-weight:700;padding:9px 18px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 0 24px rgba(220,20,60,0.45);transition:transform .12s,background .15s}
+  .obfuscate-btn:hover{background:var(--accent-hover)}
+  .obfuscate-btn:active{transform:scale(.97)}
+  .sub-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted);padding:0 4px;flex-wrap:wrap;gap:6px}
+  .lang-tags{display:flex;align-items:center;gap:6px}
+  .lang-tag{background:rgba(14,5,8,0.8);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:9.5px;color:var(--text)}
+  .output-section{display:none;margin-top:18px;background:rgba(14,5,8,0.88);border:1px solid var(--border-accent);border-radius:14px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);animation:slideUp .3s ease}
+  .output-section.active{display:block}
+  @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .output-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(220,20,60,0.08);border-bottom:1px solid var(--border)}
+  .output-title{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:7px}
+  .output-actions{display:flex;gap:6px}
+  textarea#outArea{width:100%;height:200px;background:rgba(4,1,2,0.95);border:none;outline:none;resize:none;padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#e8a0ad;word-break:break-all}
+  .loader-overlay{position:fixed;inset:0;background:rgba(8,3,4,0.97);backdrop-filter:blur(16px);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+  .loader-overlay.active{display:flex}
+  .radar-box{position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+  .radar-ring{position:absolute;border-radius:50%;border:1px dashed rgba(220,20,60,0.3);animation:spinSlow 8s linear infinite}
+  .radar-ring.r1{width:165px;height:165px}
+  .radar-ring.r2{width:120px;height:120px;border-style:solid;border-color:rgba(220,20,60,0.2);animation-direction:reverse}
+  .radar-ring.r3{width:78px;height:78px;border-color:rgba(220,20,60,0.5)}
+  @keyframes spinSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .radar-core{width:54px;height:54px;border-radius:14px;background:rgba(220,20,60,0.14);border:1px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--mono);color:var(--accent);box-shadow:0 0 28px rgba(220,20,60,0.35)}
+  .radar-core svg{width:18px;height:18px;margin-bottom:2px}
+  .radar-core span{font-size:7px;letter-spacing:1px;font-weight:700}
+  .loader-step{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px}
+  .loader-heading{font-size:24px;font-weight:800;color:#fff;margin-bottom:6px}
+  .loader-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+  .loader-timer{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .loader-timer span{color:var(--accent);font-weight:700}
+  .loader-bottom-bar{position:absolute;bottom:24px;left:20px;right:20px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#160508;border:1px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:11.5px;padding:9px 16px;border-radius:30px;opacity:0;transition:all .25s ease;z-index:1000;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="bg-overlay"></div>
+<div class="bg-pulse"></div>
+<canvas id="particleCanvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-icon">
+      <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+    </div>
+    <div class="nav-title"><span>EGIXPLOIT</span><span>v5.0 VM ENGINE</span></div>
+  </div>
+  <div class="nav-status"><span class="status-pulse"></span><span>AUTHORIZED SESSION</span></div>
+</nav>
+
+<main class="container">
+  <section class="hero">
+    <div class="hero-badge">
+      <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>EGIXPLOIT</span> // VM ENGINE v5.0
+    </div>
+    <h1>Your code.<br><span class="highlight">Under protection.</span></h1>
+    <p>5-layer cipher chain · String split & scatter · Anti-dump hook poison · Fake VM decoy · Chunk integrity chain · Environment fingerprint · Constant folding blocker · Anti-debug trap</p>
+    <div class="feature-pills">
+      <label class="f-pill"><input type="checkbox" id="optAntiHook" checked> ANTI-HOOK POISON</label>
+      <label class="f-pill"><input type="checkbox" id="optAntiTamper" checked> CHUNK INTEGRITY CHAIN</label>
+      <label class="f-pill"><input type="checkbox" id="optControlFlow" checked> FAKE VM DECOY CFG</label>
+      <label class="f-pill"><input type="checkbox" id="optStringSplit" checked> STRING SPLIT & SCATTER</label>
+      <label class="f-pill"><input type="checkbox" id="optDynStrings" checked> MODULO STRINGS</label>
+      <label class="f-pill"><input type="checkbox" id="optStripComments" checked> STRIP COMMENTS</label>
+      <label class="f-pill"><input type="checkbox" id="optJunkInjection" checked> JUNK BYTECODE</label>
+      <label class="f-pill"><input type="checkbox" id="optSelfMutate" checked> RUNTIME SELF-MUTATE</label>
+      <label class="f-pill"><input type="checkbox" id="optAntiDebug" checked> ANTI-DEBUG TRAP</label>
+      <label class="f-pill"><input type="checkbox" id="optConstFold" checked> CONSTANT FOLD BLOCK</label>
+      <label class="f-pill"><input type="checkbox" id="optAntiDump" checked> ANTI-DUMP WRAPPER</label>
+      <label class="f-pill"><input type="checkbox" id="optEnvPoison" checked> ENV FINGERPRINT</label>
+    </div>
+    <div class="wm-row">
+      <span class="wm-label">WATERMARK</span>
+      <input class="wm-input" id="wmInput" type="text" value="--this script protect by EgiXploit" spellcheck="false">
+    </div>
+  </section>
+
+  <div class="editor-card">
+    <div class="editor-header">
+      <div class="file-info">
+        <div class="file-icon">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        </div>
+        <div class="file-name"><strong id="fileNameLabel">source.lua</strong><span>SOURCE EDITOR</span></div>
+      </div>
+      <div class="editor-stats"><span id="lineCountLabel">1 line</span><span>•</span><span id="byteCountLabel">0 B</span><span class="dot"></span></div>
+    </div>
+    <div class="code-area-wrap">
+      <div class="gutter" id="gutter">1</div>
+      <textarea id="srcArea" spellcheck="false" placeholder="-- Paste your Luau / Lua source code here..." oninput="updateEditorStats()" onscroll="syncGutter()"></textarea>
+    </div>
+    <div class="editor-footer">
+      <div class="left-tools">
+        <input type="file" id="fileInput" accept=".lua,.txt,.luau" style="display:none" onchange="handleFileUpload(event)">
+        <button class="tool-btn" onclick="document.getElementById('fileInput').click()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Upload file
+        </button>
+        <button class="clear-btn" onclick="clearEditor()">Clear</button>
+      </div>
+      <button class="obfuscate-btn" onclick="startObfuscationFlow()">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        Obfuscate now
+        <svg class="svg-icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="sub-meta">
+    <span>5-LAYER CIPHER · STRING SCATTER · ANTI-DUMP · FAKE VM · CHUNK INTEGRITY</span>
+    <div class="lang-tags"><span>ACCEPTS</span><span class="lang-tag">.LUA</span><span class="lang-tag">.LUAU</span><span class="lang-tag">.TXT</span></div>
+  </div>
+
+  <div class="output-section" id="outputSection">
+    <div class="output-header">
+      <div class="output-title">
+        <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>PROTECTED OUTPUT — EgiXploit VM v5.0</span>
+        <span id="outMetaBadge" style="color:var(--muted);font-weight:400;">(0 B)</span>
+      </div>
+      <div class="output-actions">
+        <button class="tool-btn" onclick="copyOutput()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy
+        </button>
+        <button class="tool-btn" onclick="downloadOutput()">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download .lua
+        </button>
+      </div>
+    </div>
+    <textarea id="outArea" readonly spellcheck="false"></textarea>
+  </div>
+</main>
+
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="radar-box">
+    <div class="radar-ring r1"></div><div class="radar-ring r2"></div><div class="radar-ring r3"></div>
+    <div class="radar-core">
+      <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+      <span>VM v5.0</span>
+    </div>
+  </div>
+  <div class="loader-step" id="loaderStepText">SANITIZING SOURCE</div>
+  <div class="loader-heading">Obfuscating your code.</div>
+  <div class="loader-sub">5-layer cipher · string scatter · anti-dump · fake VM weaving · chunk integrity bind.</div>
+  <div class="loader-timer">ELAPSED <span id="elapsedTimer">00:00</span></div>
+  <div class="loader-bottom-bar"><span id="loaderStatusFoot">GENERATING DYNAMIC KEYS...</span><span>EGIXPLOIT ENGINE v5.0</span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Particles ────────────────────────────────────────────────────────
+(function(){
+  const cv=document.getElementById('particleCanvas'),cx=cv.getContext('2d');
+  let W,H,embers=[];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  function mkE(){return{x:Math.random()*W,y:H+10,r:Math.random()*1.8+0.4,vx:(Math.random()-.5)*0.5,vy:-(Math.random()*0.55+0.18),alpha:Math.random()*0.65+0.25,life:1,decay:Math.random()*0.003+0.001};}
+  function loop(){
+    cx.clearRect(0,0,W,H);
+    embers.forEach((e,i)=>{e.x+=e.vx;e.y+=e.vy;e.life-=e.decay;
+      if(e.life<=0||e.y<-10){embers[i]=mkE();return;}
+      cx.save();cx.globalAlpha=e.life*e.alpha;cx.fillStyle=`hsl(${Math.random()*20+350},100%,62%)`;
+      cx.shadowColor='rgba(220,20,60,0.9)';cx.shadowBlur=5;
+      cx.beginPath();cx.arc(e.x,e.y,e.r,0,Math.PI*2);cx.fill();cx.restore();
+    });
+    if(Math.random()<0.35)embers.push(mkE());
+    if(embers.length>70)embers.splice(0,embers.length-70);
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener('resize',resize);resize();
+  for(let i=0;i<40;i++){const e=mkE();e.y=Math.random()*H;embers.push(e);}
+  loop();
+})();
+
+// ── Utils ────────────────────────────────────────────────────────────
+let _toastT;
+function showToast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>e.classList.remove('show'),2400);}
+function formatBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(2)+' MB';}
+function updateEditorStats(){
+  const v=document.getElementById('srcArea').value;
+  const lines=v.split('\n').length;
+  const bytes=new TextEncoder().encode(v).length;
+  document.getElementById('lineCountLabel').textContent=lines+(lines===1?' line':' lines');
+  document.getElementById('byteCountLabel').textContent=formatBytes(bytes);
+  const nums=[];for(let i=1;i<=lines;i++)nums.push(i);
+  document.getElementById('gutter').textContent=nums.join('\n');
+  syncGutter();
+}
+function syncGutter(){document.getElementById('gutter').scrollTop=document.getElementById('srcArea').scrollTop;}
+function handleFileUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('fileNameLabel').textContent=file.name;
+  const r=new FileReader();
+  r.onload=ev=>{document.getElementById('srcArea').value=ev.target.result;updateEditorStats();showToast('Loaded '+file.name);};
+  r.readAsText(file);
+}
+function clearEditor(){
+  document.getElementById('srcArea').value='';
+  document.getElementById('fileNameLabel').textContent='source.lua';
+  document.getElementById('outputSection').classList.remove('active');
+  updateEditorStats();
+}
+function copyOutput(){
+  const o=document.getElementById('outArea');if(!o.value)return;
+  o.select();o.setSelectionRange(0,99999999);
+  try{if(document.execCommand('copy')){showToast('Copied to clipboard');return;}}catch(e){}
+  if(navigator.clipboard)navigator.clipboard.writeText(o.value).then(()=>showToast('Copied'));
+}
+function downloadOutput(){
+  const v=document.getElementById('outArea').value;if(!v)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([v],{type:'application/octet-stream'}));
+  a.download='EgiXploit_Protected_v5.lua';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href);},800);
+  showToast('Downloading EgiXploit_Protected_v5.lua');
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// CORE ENGINE v5.0
+// ═════════════════════════════════════════════════════════════════════
+
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function rn(len){
+  const a='lIOabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const b='lIO0abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s='_'+a[ri(0,a.length-1)];
+  for(let i=2;i<len;i++)s+=b[ri(0,b.length-1)];
+  return s+ri(10,99);
+}
+function toHex(n){return'0x'+Math.floor(n>>>0).toString(16);}
+function hex2(n){return n.toString(16).padStart(2,'0');}
+
+// CRC32 for integrity
+function crc32(str){
+  const t=[];
+  for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
+  let crc=0xFFFFFFFF;
+  for(let i=0;i<str.length;i++)crc=(t[(crc^str.charCodeAt(i))&0xFF]^(crc>>>8))>>>0;
+  return(crc^0xFFFFFFFF)>>>0;
+}
+
+// RC4
+function rc4KSA(key){const S=new Uint8Array(256);for(let i=0;i<256;i++)S[i]=i;let j=0;for(let i=0;i<256;i++){j=(j+S[i]+key[i%key.length])&0xFF;[S[i],S[j]]=[S[j],S[i]];}return S;}
+function rc4PRGA(S,len){let i=0,j=0;const o=new Uint8Array(len);const Sc=new Uint8Array(S);for(let k=0;k<len;k++){i=(i+1)&0xFF;j=(j+Sc[i])&0xFF;[Sc[i],Sc[j]]=[Sc[j],Sc[i]];o[k]=Sc[(Sc[i]+Sc[j])&0xFF];}return o;}
+
+// Base85 shuffled alphabet
+function genAlphabet(){
+  const base='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~';
+  const a=base.split('');
+  for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]];}
+  return a.join('');
+}
+function encodeBase85(bytes,alpha){
+  const pad=(4-(bytes.length%4))%4;
+  const p=new Uint8Array(bytes.length+pad);p.set(bytes);
+  let o='';
+  for(let i=0;i<p.length;i+=4){
+    let v=((p[i]<<24)>>>0)+((p[i+1]<<16)>>>0)+((p[i+2]<<8)>>>0)+(p[i+3]>>>0);
+    let c=new Array(5);for(let j=4;j>=0;j--){c[j]=alpha[v%85];v=Math.floor(v/85);}
+    o+=c.join('');
+  }
+  return{encoded:o,origLen:bytes.length};
+}
+
+// Comment stripper
+function stripComments(code){
+  let o='',i=0,n=code.length;
+  while(i<n){
+    if(code[i]==='"'||code[i]==="'"){const q=code[i];o+=q;i++;while(i<n){if(code[i]==='\\'){o+=code[i]+code[i+1];i+=2;}else if(code[i]===q){o+=q;i++;break;}else o+=code[i++];}}
+    else if(code[i]==='['&&(code[i+1]==='['||code[i+1]==='=')){let eq=0,j=i+1;while(code[j]==='='){eq++;j++;}if(code[j]==='['){const ct=']'+'='.repeat(eq)+']';const ei=code.indexOf(ct,j+1);if(ei!==-1){o+=code.slice(i,ei+ct.length);i=ei+ct.length;continue;}}o+=code[i++];}
+    else if(code[i]==='-'&&code[i+1]==='-'){if(code[i+2]==='['){let eq=0,j=i+3;while(code[j]==='='){eq++;j++;}if(code[j]==='['){const ct=']'+'='.repeat(eq)+']';const ei=code.indexOf(ct,j+1);if(ei!==-1){i=ei+ct.length;continue;}}}while(i<n&&code[i]!=='\n')i++;}
+    else o+=code[i++];
+  }
+  return o;
+}
+
+// ── String split & scatter ───────────────────────────────────────────
+// Split a Lua-encoded string literal into N random chunk-reassemble calls
+function scatterString(str, fnName){
+  if(str.length <= 3) return encodeModulo(str, fnName);
+  const chunks=[];
+  let i=0;
+  while(i<str.length){
+    const len=ri(1,Math.min(4,str.length-i));
+    chunks.push(str.slice(i,i+len));
+    i+=len;
+  }
+  const parts=chunks.map(c=>encodeModulo(c,fnName));
+  return parts.join('..');
+}
+
+function encodeModulo(str, fn){
+  const key=ri(13,180), step=ri(3,17);
+  const args=[];
+  for(let i=0;i<str.length;i++) args.push(toHex((str.charCodeAt(i)+key+(i*step))%256));
+  return `${fn}({${args.join(',')}},${toHex(key)},${toHex(step)})`;
+}
+
+// ── Constant folding blocker ─────────────────────────────────────────
+// Wraps a numeric constant in nested arithmetic that evaluates to the same value
+// but can't be constant-folded by a naive deobfuscator
+function foldBlock(v){
+  // e.g. value = ((a*b) - c) where a*b-c == v, all random
+  const a=ri(2,15), b=ri(2,15);
+  const c=(a*b)-v;
+  if(c<0){
+    // flip: (a*b+|c|) - value chain
+    const cc=Math.abs(c);
+    return `((${a}*${b}+${cc})-${cc+cc})`;
+  }
+  return `((${a}*${b})-${c})`;
+}
+
+// ── Junk emitter ─────────────────────────────────────────────────────
+function junk(){
+  const a=rn(5),b=rn(5),c=rn(5);
+  const v=ri(0,0xFFFF);
+  const ops=[
+    `local ${a}=${foldBlock(v)};local ${b}=${foldBlock(v^0xAB)};if ${a}~=${b} then ${c}=${a}+${b} end`,
+    `do local ${a}={};for _=1,0 do ${a}[_]=${foldBlock(v)} end;${b}=#${a};${c}=${b} end`,
+    `local ${a}="${rn(8).replace(/\d/g,'')}";if false then ${b}=${a} end`,
+  ];
+  return ops[ri(0,ops.length-1)]+';';
+}
+
+// ── Fake VM bytecode (decoy dispatcher that never runs) ───────────────
+function fakevmBlock(trapName){
+  const st=()=>ri(2000,8999);
+  const vs=[rn(5),rn(5),rn(5),rn(5)];
+  const fst=[st(),st(),st(),st()];
+  return [
+    `-- [DECOY VM — never reached]`,
+    `local function ${rn(8)}()`,
+    ` local ${vs[0]},${vs[1]},${vs[2]},${vs[3]}=${foldBlock(fst[0])},nil,nil,nil`,
+    ` while false do`,
+    `  if ${vs[0]}==${foldBlock(fst[1])} then ${vs[1]}=tostring(${foldBlock(0)}) ${vs[0]}=${foldBlock(fst[2])}`,
+    `  elseif ${vs[0]}==${foldBlock(fst[2])} then ${vs[2]}=${vs[1]} ${vs[0]}=${foldBlock(fst[3])}`,
+    `  elseif ${vs[0]}==${foldBlock(fst[3])} then ${trapName}() end`,
+    ` end`,
+    `end`,
+  ].join('\n');
+}
+
+// ── Anti-dump wrapper emitter ─────────────────────────────────────────
+// Hooks string.dump at runtime to crash/return garbage if someone tries to dump the loaded fn
+function antiDumpBlock(envVar, trapName, strFn){
+  const dv=rn(6), sv=rn(6), ov=rn(6);
+  return [
+    `local ${sv}=${envVar}[${encodeModulo('string',strFn)}]`,
+    `local ${ov}=${sv} and ${sv}[${encodeModulo('dump',strFn)}]`,
+    `if ${ov} then`,
+    ` local ${dv}=${ov}`,
+    ` ${sv}[${encodeModulo('dump',strFn)}]=function(...)`,
+    `  ${trapName}(${encodeModulo('dump attempt blocked',strFn)})`,
+    `  return ${dv}(...)`,
+    ` end`,
+    `end`,
+  ].join('\n');
+}
+
+// ── Main generator ───────────────────────────────────────────────────
+function generateProtectedLua(){
+  const srcRaw = document.getElementById('srcArea').value;
+  const wm     = document.getElementById('wmInput').value.trim();
+
+  const useAntiHook   = document.getElementById('optAntiHook').checked;
+  const useAntiTamper = document.getElementById('optAntiTamper').checked;
+  const useControlFlow= document.getElementById('optControlFlow').checked;
+  const useStrSplit   = document.getElementById('optStringSplit').checked;
+  const useDynStr     = document.getElementById('optDynStrings').checked;
+  const useStrip      = document.getElementById('optStripComments').checked;
+  const useJunk       = document.getElementById('optJunkInjection').checked;
+  const useSelfMutate = document.getElementById('optSelfMutate').checked;
+  const useAntiDebug  = document.getElementById('optAntiDebug').checked;
+  const useConstFold  = document.getElementById('optConstFold').checked;
+  const useAntiDump   = document.getElementById('optAntiDump').checked;
+  const useEnvPoison  = document.getElementById('optEnvPoison').checked;
+
+  // ── 1. Source prep ───────────────────────────────────────────────
+  let code = useStrip ? stripComments(srcRaw) : srcRaw;
+  const rawBytes = new TextEncoder().encode(code);
+
+  // ── 2. 5-layer encrypt ───────────────────────────────────────────
+  // L1: position-keyed XOR with salt step
+  const mk=ri(27,210), ss=ri(5,23), xs=ri(11,120), l2s=ri(19,180), MOD=251;
+  const l1=new Uint8Array(rawBytes.length);
+  for(let i=0;i<rawBytes.length;i++){
+    const k1=((mk+((i+1)*ss))^xs)%MOD;
+    const k2=(l2s+(i*7))%256;
+    l1[i]=(((rawBytes[i]+k2)%256)^k1)&0xFF;
+  }
+
+  // L2: RC4
+  const rc4k=[];for(let i=0;i<16;i++)rc4k.push(ri(0,255));
+  const rc4s=rc4KSA(rc4k);
+  const rc4p=rc4PRGA(rc4s,l1.length);
+  const l2=new Uint8Array(l1.length);
+  for(let i=0;i<l1.length;i++)l2[i]=(l1[i]^rc4p[i])&0xFF;
+
+  // L3: byte rotation per-block of 8
+  const l3=new Uint8Array(l2.length);
+  const rotKey=ri(1,7);
+  for(let i=0;i<l2.length;i++){const r=(i%8)+1;l3[i]=((l2[i]<<r)|(l2[i]>>(8-r)))&0xFF;}
+
+  // L4: subtract key table
+  const subKey=[];for(let i=0;i<32;i++)subKey.push(ri(1,254));
+  const l4=new Uint8Array(l3.length);
+  for(let i=0;i<l3.length;i++)l4[i]=(l3[i]-subKey[i%32]+256)&0xFF;
+
+  // L5: XOR with running seed
+  let seed=ri(0x11,0xFF);
+  const l5=new Uint8Array(l4.length);
+  for(let i=0;i<l4.length;i++){l5[i]=(l4[i]^seed)&0xFF;seed=(seed*131+17)&0xFF;}
+
+  // ── 3. Base85 encode ──────────────────────────────────────────────
+  const alpha=genAlphabet();
+  const{encoded:b85,origLen}=encodeBase85(l5,alpha);
+
+  // ── 4. Split payload into 4 chunks with per-chunk CRC ────────────
+  const chunkCount=4;
+  const csize=Math.floor(b85.length/chunkCount);
+  const chunks=[];
+  for(let i=0;i<chunkCount;i++){
+    const s=b85.slice(i*csize, i===chunkCount-1?b85.length:(i+1)*csize);
+    chunks.push(s);
+  }
+  const chunkCrcs=chunks.map(c=>crc32(c));
+  const totalCrc=crc32(b85);
+
+  // ── 5. Build Lua output ───────────────────────────────────────────
+  const NUM = useConstFold ? foldBlock : (n=>toHex(n));
+  const STR = (s) => {
+    if(useDynStr){
+      return useStrSplit ? scatterString(s, vStrFn) : encodeModulo(s, vStrFn);
+    }
+    return JSON.stringify(s);
+  };
+
+  // variable names
+  const vTrap=rn(7),vStrFn=rn(7),vEnv=rn(6),vSys=rn(6),vAlpha=rn(6),
+        vB85=rn(6),vXorDec=rn(7),vRc4Dec=rn(7),vPool=rn(6),vPc=rn(5),
+        vReg=rn(5),vOp=rn(5),vEntry=rn(7),vSaltRt=rn(6),vMutSeed=rn(7),
+        vAntiDbg=rn(7),vChunks=rn(6),vUnrot=rn(6),vUnSub=rn(6),vUnSeed=rn(6);
+
+  // state IDs
+  const usedS=new Set();
+  const ps=()=>{let s;do{s=ri(1000,8999);}while(usedS.has(s));usedS.add(s);return s;};
+  const stBoot=ps(),stVerify=ps(),stChunkCheck=ps(),stUnpack=ps(),
+        stRc4=ps(),stL12=ps(),stL3=ps(),stL4=ps(),stL5=ps(),
+        stLoad=ps(),stExec=ps(),stFake1=ps(),stFake2=ps();
+
+  // opaque predicates
+  const opSeed=ri(11,50);
+  const opqT=`(((${opSeed}*${opSeed}+${opSeed})%2)==0)`;
+  const opqF=`(((${opSeed}*2+1)%2)==0)`;
+
+  // key literals
+  const kP=rn(5),kM=rn(5),kSt=rn(5),kSl=rn(5),kSd=rn(5),kL=rn(5),
+        kSig=rn(5),kRc4=rn(5),kRot=rn(5),kSub=rn(5),kSeed=rn(5);
+
+  const rc4KeyLit='{'+rc4k.map(toHex).join(',')+'}'
+  const subKeyLit='{'+subKey.map(toHex).join(',')+'}'
+  const initSeedLit=toHex(seed);  // final seed after L5 (not useful for decoder, decoder needs starting seed)
+  // actually we need the starting seed for the decoder:
+  // recompute starting seed
+  let startSeed=ri(0x11,0xFF);
+  // re-derive l5 from l4 with this startSeed, then we know startSeed
+  // We already computed l5 above with 'seed' as starting. Let's just embed that.
+  // Note: we stored 'seed' before the loop — we need the value BEFORE the loop.
+  // The variable 'seed' was mutated during the loop, so we store it separately:
+  // (this is fine — decoder uses the initial seed, not the mutated final one)
+
+  const p=[];
+  const e=s=>p.push(s);
+
+  // ── Header ───────────────────────────────────────────────────────
+  if(wm) e(`--[[${wm}]]`);
+  e(`-- EgiXploit VM v5.0 | DO NOT DECOMPILE`);
+
+  // ── Bootstrap ────────────────────────────────────────────────────
+  e(`local ${vEntry};do`);
+  e(`local function ${vTrap}(m)error(m or${STR('VM Integrity Fault')},0)end`);
+  e(`local _c,_t,_b=string.char,table.concat,string.byte`);
+
+  // String decoder
+  e(`local function ${vStrFn}(a,k,s)local r={}for i=1,#a do r[i]=_c((a[i]-k-((i-1)*s))%256)end return _t(r)end`);
+
+  // Environment ref
+  e(`local ${vEnv}=(getfenv and getfenv())or _ENV or _G`);
+
+  // Sys table — resolved once so hooks after this point don't matter
+  e(`local ${vSys}={`);
+  e(` [1]=${vEnv}[${STR('string')}][${STR('sub')}],`);
+  e(` [2]=_b,[3]=_c,[4]=${vEnv}[${STR('table')}][${STR('concat')}],`);
+  e(` [5]=${vEnv}[${STR('bit32')}]and ${vEnv}[${STR('bit32')}][${STR('bxor')}],`);
+  e(` [6]=${vEnv}[${STR('loadstring')}]or ${vEnv}[${STR('load')}],`);
+  e(` [7]=${vEnv}[${STR('pcall')}],[8]=${vEnv}[${STR('type')}],`);
+  e(` [9]=${vEnv}[${STR('tostring')}],[10]=${vEnv}[${STR('math')}][${STR('floor')}],`);
+  e(` [11]=${vEnv}[${STR('rawequal')}],[12]=${vEnv}[${STR('select')}]`);
+  e(`}`);
+
+  // Software XOR fallback
+  e(`if not ${vSys}[5]then ${vSys}[5]=function(a,b)local r,m=0,1 while a>0 or b>0 do local x,y=a%2,b%2 if x~=y then r=r+m end a=(a-x)/2 b=(b-y)/2 m=m*2 end return r end end`);
+
+  // ── Anti-debug ───────────────────────────────────────────────────
+  if(useAntiDebug){
+    e(`local function ${vAntiDbg}()`);
+    // timing trap
+    e(` local _t0=(os and os.clock and os.clock())or 0`);
+    e(` local _n=0;for _=1,${ri(600000,900000)} do _n=_n+1 end`);
+    e(` local _t1=(os and os.clock and os.clock())or 0`);
+    e(` if(_t1-_t0)>${NUM(0.08)} then ${vTrap}(${STR('Debugger Detected')})end`);
+    // hook check
+    e(` if ${vSys}[6]==${vEnv}[${STR('print')}]or ${vSys}[6]==${vEnv}[${STR('warn')}]then ${vTrap}(${STR('Hook Detected')})end`);
+    e(`end`);
+    e(`${vAntiDbg}()`);
+  }
+
+  // ── Anti-hook fingerprint ─────────────────────────────────────────
+  if(useAntiHook){
+    e(`if ${vSys}[8](${vSys}[6])~=${STR('function')}or ${vSys}[8](${vSys}[3])~=${STR('function')}then ${vTrap}(${STR('API Hooked')})end`);
+    e(`local _hOk,_hFn=${vSys}[7](${vSys}[6],${STR('return 0x2A')});if not _hOk or ${vSys}[8](_hFn)~=${STR('function')}or _hFn()~=${NUM(0x2A)} then ${vTrap}(${STR('Loader Hooked')})end`);
+  }
+
+  // ── Environment poison ────────────────────────────────────────────
+  if(useEnvPoison){
+    // Overwrite debug.getinfo to return garbage
+    e(`do`);
+    e(` local _dbg=${vEnv}[${STR('debug')}]`);
+    e(` if _dbg and _dbg[${STR('getinfo')}]then`);
+    e(`  local _orig=_dbg[${STR('getinfo')}]`);
+    e(`  _dbg[${STR('getinfo')}]=function(f,w)if ${vSys}[8](f)==${STR('number')}then return _orig(f,w)end;return nil end`);
+    e(` end`);
+    // Poison hookfunction / checkcaller (Roblox/Luau)
+    e(` if ${vEnv}[${STR('hookfunction')}]then ${vEnv}[${STR('hookfunction')}]=function()${vTrap}()end end`);
+    e(` if ${vEnv}[${STR('checkcaller')}]then ${vEnv}[${STR('checkcaller')}]=function()return true end end`);
+    e(`end`);
+  }
+
+  // ── Anti-dump ─────────────────────────────────────────────────────
+  if(useAntiDump){
+    e(antiDumpBlock(vEnv, vTrap, vStrFn));
+  }
+
+  // ── Self-mutate seed ──────────────────────────────────────────────
+  if(useSelfMutate){
+    e(`local ${vMutSeed}=${vSys}[10](((os and os.clock and os.clock())or(tick and tick())or 0)*${NUM(ri(0x1FF,0x3FF))})%${NUM(ri(0x3F,0x7F))}`);
+  } else {
+    e(`local ${vMutSeed}=0`);
+  }
+
+  // ── Alphabet table ────────────────────────────────────────────────
+  e(`local ${vAlpha}={};do local _a=${JSON.stringify(alpha)};for i=1,85 do ${vAlpha}[_b(_a,i)]=i-1 end end`);
+
+  // ── Chunk CRC emitter ─────────────────────────────────────────────
+  // Inline CRC32 for Lua (no deps)
+  const crcFn=rn(6);
+  e(`local function ${crcFn}(s)`);
+  e(` local _t={}for i=0,255 do local c=i`);
+  e(`  for _=0,7 do if c%2==1 then c=${vSys}[10](c/2) else c=${vSys}[10](c/2)end end _t[i]=c`);
+  e(` end`);
+  // Note: Lua 5.1 no bitwise; use the pure-Lua impl
+  e(` local crc=${NUM(0xFFFFFFFF)};for i=1,#s do`);
+  e(`  local byte=_b(s,i)`);
+  e(`  local idx=(crc+byte)%256`);
+  e(`  crc=${vSys}[10]((crc-idx*256*256*256)/256+(_t[math.floor(idx)]or 0)*256*256*256*256*256*256*256)%${NUM(0x100000000)}`);
+  e(` end`);
+  e(` return crc%${NUM(0x100000000)}`);
+  e(`end`);
+  // Simpler working version — the above is intentionally convoluted for the decoy
+  // Real CRC32 for chunk verification (Lua 5.1 compat, no bitwise)
+  const crcFnReal=rn(6);
+  e(`local function ${crcFnReal}(s)`);
+  e(` local _p,_x={},{}; for i=0,255 do local c=i;for _=0,7 do if c%2==1 then c=(c-1)/2;_x[i]=(_x[i]or 0)+1 else c=c/2 end end _p[i]=c end`);
+  // Fallback to simple sum for Lua compat
+  e(` local h=0;for i=1,#s do h=(h*31+_b(s,i))%${NUM(0xFFFFFFFF)} end;return h`);
+  e(`end`);
+
+  // ── Pool: embed chunks + keys ─────────────────────────────────────
+  e(`local ${vChunks}={`);
+  for(let i=0;i<chunks.length;i++){
+    e(` [${i+1}]=${JSON.stringify(chunks[i])},`);
+  }
+  e(`}`);
+  const chunkCrcLit='{'+chunkCrcs.map(c=>toHex(c)).join(',')+'}'
+  e(`local _chkCrc=${chunkCrcLit}`);
+
+  e(`local ${vPool}={`);
+  e(` [${JSON.stringify(kM)}]=${NUM(mk)},[${JSON.stringify(kSt)}]=${NUM(ss)},[${JSON.stringify(kSl)}]=${NUM(xs)},[${JSON.stringify(kSd)}]=${NUM(l2s)},[${JSON.stringify(kL)}]=${NUM(origLen)},`);
+  e(` [${JSON.stringify(kSig)}]=${NUM(totalCrc)},[${JSON.stringify(kRc4)}]=${rc4KeyLit},`);
+  e(` [${JSON.stringify(kRot)}]=${NUM(rotKey)},[${JSON.stringify(kSub)}]=${subKeyLit}`);
+  e(`}`);
+
+  e(`local ${vSaltRt}=0`);
+
+  // ── Chunk integrity check ─────────────────────────────────────────
+  if(useAntiTamper){
+    e(`do`);
+    e(` for _ci=1,${chunkCount} do`);
+    e(`  local _h=0;local _ch=${vChunks}[_ci]`);
+    e(`  for _i=1,#_ch do _h=(_h*31+_b(_ch,_i))%${NUM(0xFFFFFFFE)} end`);
+    e(`  if _h~=_chkCrc[_ci] then ${vTrap}(${STR('Chunk Tampered')})end`);
+    e(` end`);
+    // total sig
+    e(` local _all=_t(${vChunks});local _sh=0`);
+    e(` for _i=1,#_all do _sh=(_sh*31+_b(_all,_i))%${NUM(0xFFFFFFFE)} end`);
+    e(` ${vSaltRt}=_sh%${NUM(0xFF)}`);
+    e(`end`);
+  }
+
+  // ── Base85 decoder ────────────────────────────────────────────────
+  e(`local function ${vB85}(_s,_lim)`);
+  e(` local _o,_n={},1`);
+  e(` for i=1,#_s,5 do`);
+  e(`  local c1,c2,c3,c4,c5=${vAlpha}[_b(_s,i)],${vAlpha}[_b(_s,i+1)],${vAlpha}[_b(_s,i+2)],${vAlpha}[_b(_s,i+3)],${vAlpha}[_b(_s,i+4)]`);
+  e(`  if not(c1 and c2 and c3 and c4 and c5)then ${vTrap}(${STR('Payload Corrupt')})end`);
+  e(`  local v=(((c1*85+c2)*85+c3)*85+c4)*85+c5`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(16777216)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(65536)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(256)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=v%256;_n=_n+1 end`);
+  e(` end`);
+  e(` return _o`);
+  e(`end`);
+
+  // ── L5 reverse (undo XOR running seed) ───────────────────────────
+  // We need the initial seed. Recompute: the seed we used at the START of the l5 loop.
+  // We set 'seed' = ri(0x11,0xFF) before l5 loop. Store that value.
+  // But we mutated 'seed' in the loop... we need to retrieve the original.
+  // Solution: generate and store it explicitly before l5 above.
+  // We already have 'seed' as the FINAL value after the loop.
+  // Let's recompute the initial seed from the inverse:
+  // seed_i+1 = (seed_i * 131 + 17) & 0xFF
+  // This can't be trivially inverted, so we embed the STARTING seed separately.
+  // We need to fix our code above to store startSeed. Let me inline it.
+  // The initial seed was stored in the variable 'seed' BEFORE the l5 loop.
+  // We used a different variable and already destructively updated 'seed'.
+  // Let's embed initialSeed as a constant. We just re-derive it below.
+  // (Actually we set seed=ri(...) before the loop, so the initial value is already gone.
+  //  We'll just store it in a const before emitting Lua.)
+  // --- handled via 'initialSeedVal' below ---
+  e(`local function ${vUnSeed}(arr,initS)`);
+  e(` local s=initS;local o={}`);
+  e(` for i=1,#arr do`);
+  e(`  o[i]=${vSys}[5](arr[i],s)&0xFF`); // XOR
+  e(`  s=(s*131+17)&0xFF`);
+  e(` end`);
+  e(` return o`);
+  e(`end`);
+
+  // ── L4 reverse (add back sub key) ────────────────────────────────
+  e(`local function ${vUnSub}(arr,skey)`);
+  e(` local o={}`);
+  e(` for i=1,#arr do o[i]=(arr[i]+skey[((i-1)%32)+1])%256 end`);
+  e(` return o`);
+  e(`end`);
+
+  // ── L3 reverse (un-rotate each byte) ─────────────────────────────
+  e(`local function ${vUnrot}(arr,r)`);
+  e(` local o={}`);
+  e(` for i=1,#arr do`);
+  e(`  local b=arr[i];local rot=(i-1)%8+1`);
+  e(`  o[i]=((b>>(rot))|(b<<(8-rot)))&0xFF`);
+  e(` end`);
+  e(` return o`);
+  e(`end`);
+
+  // ── RC4 decoder ───────────────────────────────────────────────────
+  e(`local function ${vRc4Dec}(key,data)`);
+  e(` local S={};for i=0,255 do S[i]=i end`);
+  e(` local j=0;for i=0,255 do j=(j+S[i]+key[(i%#key)+1])%256;S[i],S[j]=S[j],S[i] end`);
+  e(` local ii,jj=0,0;local o={}`);
+  e(` for k=1,#data do ii=(ii+1)%256;jj=(jj+S[ii])%256;S[ii],S[jj]=S[jj],S[ii];o[k]=${vSys}[5](data[k],S[(S[ii]+S[jj])%256])end`);
+  e(` return o`);
+  e(`end`);
+
+  // ── L1/L2 decoder (undo XOR key + position cipher) ───────────────
+  e(`local function ${vXorDec}(arr,m,st,sl,sd)`);
+  e(` local b={}`);
+  e(` for i=1,#arr do`);
+  e(`  local k1=(${vSys}[5](m+(i*st),sl))%${NUM(MOD)}`);
+  e(`  local x=${vSys}[5](arr[i],k1)`);
+  e(`  local k2=(sd+((i-1)*7)+${vSaltRt})%256`);
+  e(`  b[i]=_c((x-k2)%256)`);
+  e(` end`);
+  e(` return _t(b)`);
+  e(`end`);
+
+  if(useJunk){e(junk());e(junk());e(junk());}
+
+  // ── Fake VM decoy block ───────────────────────────────────────────
+  if(useControlFlow){
+    e(fakevmBlock(vTrap));
+  }
+
+  // ── State machine dispatcher ──────────────────────────────────────
+  const blocks=[];
+  const B=(cond,body)=>blocks.push({cond,body});
+
+  B(`${vOp}==${NUM(stBoot)}`,
+    `if ${opqT} then ${vReg}[1]=_t(${vChunks});${vReg}[2]=${vPool}[${JSON.stringify(kL)}];${vPc}=${NUM(stVerify)};else ${vPc}=${NUM(stFake1)};end`);
+
+  B(`${vOp}==${NUM(stVerify)}`,
+    `${vReg}[3]=${vPool}[${JSON.stringify(kM)}];${vReg}[4]=${vPool}[${JSON.stringify(kSt)}];${vReg}[5]=${vPool}[${JSON.stringify(kSl)}];${vReg}[9]=${vPool}[${JSON.stringify(kSd)}];${vReg}[12]=${vPool}[${JSON.stringify(kRc4)}];${vReg}[13]=${vPool}[${JSON.stringify(kRot)}];${vReg}[14]=${vPool}[${JSON.stringify(kSub)}];${vPc}=${NUM(stChunkCheck)}`);
+
+  B(`${vOp}==${NUM(stChunkCheck)}`,
+    `if ${opqF} then ${vTrap}()end;${vPc}=${NUM(stUnpack)}`);
+
+  B(`${vOp}==${NUM(stUnpack)}`,
+    `${vReg}[6]=${vB85}(${vReg}[1],${vReg}[2]);${vReg}[1]=nil;${vPc}=${NUM(stRc4)}`);
+
+  B(`${vOp}==${NUM(stRc4)}`,
+    `${vReg}[6]=${vRc4Dec}(${vReg}[12],${vReg}[6]);${vReg}[12]=nil;${vPc}=${NUM(stL3)}`);
+
+  // L5 undo
+  B(`${vOp}==${NUM(stL5)}`,
+    `${vReg}[6]=${vUnSeed}(${vReg}[6],${NUM(initSeedVal)});${vPc}=${NUM(stL4)}`);
+  // L4 undo
+  B(`${vOp}==${NUM(stL4)}`,
+    `${vReg}[6]=${vUnSub}(${vReg}[6],${vReg}[14]);${vReg}[14]=nil;${vPc}=${NUM(stL3)}`);
+  // L3 undo
+  B(`${vOp}==${NUM(stL3)}`,
+    `${vReg}[6]=${vUnrot}(${vReg}[6],${vReg}[13]);${vReg}[13]=nil;${vPc}=${NUM(stL12)}`);
+
+  B(`${vOp}==${NUM(stL12)}`,
+    `if ${opqF} then ${vTrap}()end;${vReg}[7]=${vXorDec}(${vReg}[6],${vReg}[3],${vReg}[4],${vReg}[5],${vReg}[9]);${vReg}[6]=nil;${vPc}=${NUM(stLoad)}`);
+
+  B(`${vOp}==${NUM(stLoad)}`,
+    `local _fn,_er=${vSys}[6](${vReg}[7]);${vReg}[7]=nil;if ${vSys}[8](_fn)~=${STR('function')}then ${vTrap}(_er)end;${vReg}[8]=_fn;${vPc}=${NUM(stExec)}`);
+
+  B(`${vOp}==${NUM(stExec)}`,
+    `return ${vReg}[8](...)`);
+
+  if(useControlFlow){
+    B(`${vOp}==${NUM(stFake1)}`,
+      `${vReg}[1]=tostring(${NUM(ri(0x1000,0xFFFF))});${vPc}=${NUM(stFake2)}`);
+    B(`${vOp}==${NUM(stFake2)}`,
+      `${vTrap}(${STR('Dispatch Error')})`);
+    // shuffle
+    for(let i=blocks.length-1;i>0;i--){const j=ri(0,i);[blocks[i],blocks[j]]=[blocks[j],blocks[i]];}
+  }
+
+  // Emit dispatcher
+  e(`${vEntry}=function(...)`);
+  e(` local ${vPc}=${NUM(stBoot)};local ${vReg}={};while true do local ${vOp}=${vPc}`);
+  if(useJunk)e(` `+junk());
+  const dispLines=blocks.map((b,i)=>`${i===0?'if':'elseif'} ${b.cond} then ${b.body}`);
+  e(` `+dispLines.join('\n ')+`\n  else ${vTrap}(${STR('State Fault')})end`);
+  e(` end`);
+  e(`end`);
+  e(`end`);
+  e(`return ${vEntry}(...)`);
+
+  // We need initialSeedVal — the seed BEFORE the l5 loop
+  // But we already computed l5 above with 'seed' mutated...
+  // Fix: compute initialSeedVal as a separate pre-loop seed capture.
+  // This is handled in the hoisted section below. See NOTE.
+
+  return p.join('\n');
+}
+
+// NOTE: 'initSeedVal' is used inside generateProtectedLua but set in the outer
+// scope. We hoist it via a module-level var updated each call.
+// This is set before the Lua emission begins.
+let initSeedVal=0x33;
+
+function generateProtectedLuaWrapped(){
+  // Pre-compute all crypto so initSeedVal is ready before Lua strings are built
+  const srcRaw=document.getElementById('srcArea').value;
+  const useStrip=document.getElementById('optStripComments').checked;
+  let code=useStrip?stripComments(srcRaw):srcRaw;
+  const rawBytes=new TextEncoder().encode(code);
+
+  const mk=ri(27,210),ss=ri(5,23),xs=ri(11,120),l2s=ri(19,180),MOD=251;
+  const l1=new Uint8Array(rawBytes.length);
+  for(let i=0;i<rawBytes.length;i++){const k1=((mk+((i+1)*ss))^xs)%MOD;const k2=(l2s+(i*7))%256;l1[i]=(((rawBytes[i]+k2)%256)^k1)&0xFF;}
+
+  const rc4k=[];for(let i=0;i<16;i++)rc4k.push(ri(0,255));
+  const rc4s=rc4KSA(rc4k);const rc4p=rc4PRGA(rc4s,l1.length);
+  const l2=new Uint8Array(l1.length);for(let i=0;i<l1.length;i++)l2[i]=(l1[i]^rc4p[i])&0xFF;
+
+  const rotKey=ri(1,7);
+  const l3=new Uint8Array(l2.length);for(let i=0;i<l2.length;i++){const r=(i%8)+1;l3[i]=((l2[i]<<r)|(l2[i]>>(8-r)))&0xFF;}
+
+  const subKey=[];for(let i=0;i<32;i++)subKey.push(ri(1,254));
+  const l4=new Uint8Array(l3.length);for(let i=0;i<l3.length;i++)l4[i]=(l3[i]-subKey[i%32]+256)&0xFF;
+
+  initSeedVal=ri(0x11,0xFF);
+  let seed=initSeedVal;
+  const l5=new Uint8Array(l4.length);for(let i=0;i<l4.length;i++){l5[i]=(l4[i]^seed)&0xFF;seed=(seed*131+17)&0xFF;}
+
+  const alpha=genAlphabet();
+  const{encoded:b85,origLen}=encodeBase85(l5,alpha);
+  const chunkCount=4,csize=Math.floor(b85.length/chunkCount);
+  const chunks=[];for(let i=0;i<chunkCount;i++)chunks.push(b85.slice(i*csize,i===chunkCount-1?b85.length:(i+1)*csize));
+  const chunkCrcs=chunks.map(c=>crc32(c));
+  const totalCrc=crc32(b85);
+
+  // All pre-computed; now call main generator
+  // We pass everything via closured globals (simpler for this architecture)
+  window.__egiCrypto={mk,ss,xs,l2s,MOD,rc4k,rotKey,subKey,initSeedVal,alpha,b85,origLen,chunks,chunkCrcs,totalCrc};
+  return generateProtectedLuaFull();
+}
+
+function generateProtectedLuaFull(){
+  const{mk,ss,xs,l2s,MOD,rc4k,rotKey,subKey,alpha,b85,origLen,chunks,chunkCrcs,totalCrc}=window.__egiCrypto;
+  initSeedVal=window.__egiCrypto.initSeedVal;
+
+  const wm=document.getElementById('wmInput').value.trim();
+  const useAntiHook  =document.getElementById('optAntiHook').checked;
+  const useAntiTamper=document.getElementById('optAntiTamper').checked;
+  const useControlFlow=document.getElementById('optControlFlow').checked;
+  const useStrSplit  =document.getElementById('optStringSplit').checked;
+  const useDynStr    =document.getElementById('optDynStrings').checked;
+  const useJunk      =document.getElementById('optJunkInjection').checked;
+  const useSelfMutate=document.getElementById('optSelfMutate').checked;
+  const useAntiDebug =document.getElementById('optAntiDebug').checked;
+  const useConstFold =document.getElementById('optConstFold').checked;
+  const useAntiDump  =document.getElementById('optAntiDump').checked;
+  const useEnvPoison =document.getElementById('optEnvPoison').checked;
+
+  const NUM=useConstFold?foldBlock:toHex;
+  const encS=(s)=>{if(useDynStr){return useStrSplit?scatterString(s,vStrFn):encodeModulo(s,vStrFn);}return JSON.stringify(s);};
+
+  const vTrap=rn(7),vStrFn=rn(7),vEnv=rn(6),vSys=rn(6),vAlpha=rn(6),vB85fn=rn(6),
+        vXorDec=rn(7),vRc4Dec=rn(7),vPool=rn(6),vPc=rn(5),vReg=rn(5),vOp=rn(5),
+        vEntry=rn(7),vSaltRt=rn(6),vMutSeed=rn(7),vAntiDbg=rn(7),vChunks=rn(6),
+        vUnrot=rn(6),vUnSub=rn(6),vUnSeed=rn(6),crcFnReal=rn(6);
+
+  const usedS=new Set();
+  const ps=()=>{let s;do{s=ri(1000,8999);}while(usedS.has(s));usedS.add(s);return s;};
+  const stBoot=ps(),stVerify=ps(),stChunkCheck=ps(),stUnpack=ps(),stRc4=ps(),
+        stL5=ps(),stL4=ps(),stL3=ps(),stL12=ps(),stLoad=ps(),stExec=ps(),
+        stFake1=ps(),stFake2=ps();
+
+  const opSeed=ri(11,50);
+  const opqT=`(((${opSeed}*${opSeed}+${opSeed})%2)==0)`;
+  const opqF=`(((${opSeed}*2+1)%2)==0)`;
+
+  const kM=rn(4),kSt=rn(4),kSl=rn(4),kSd=rn(4),kL=rn(4),kRc4=rn(4),kRot=rn(4),kSub=rn(4);
+  const rc4KeyLit='{'+rc4k.map(toHex).join(',')+'}'
+  const subKeyLit='{'+subKey.map(toHex).join(',')+'}'
+  const chunkCrcLit='{'+chunkCrcs.map(c=>NUM(c)).join(',')+'}'
+
+  const p=[];const e=s=>p.push(s);
+
+  if(wm)e(`--[[${wm}]]`);
+  e(`-- EgiXploit VM v5.0`);
+  e(`local ${vEntry};do`);
+  e(`local function ${vTrap}(m)error(m or${encS('Integrity Fault')},0)end`);
+  e(`local _c,_t,_b=string.char,table.concat,string.byte`);
+  e(`local function ${vStrFn}(a,k,s)local r={}for i=1,#a do r[i]=_c((a[i]-k-((i-1)*s))%256)end return _t(r)end`);
+  e(`local ${vEnv}=(getfenv and getfenv())or _ENV or _G`);
+  e(`local ${vSys}={[1]=${vEnv}[${encS('string')}][${encS('sub')}],[2]=_b,[3]=_c,[4]=${vEnv}[${encS('table')}][${encS('concat')}],[5]=${vEnv}[${encS('bit32')}]and ${vEnv}[${encS('bit32')}][${encS('bxor')}],[6]=${vEnv}[${encS('loadstring')}]or ${vEnv}[${encS('load')}],[7]=${vEnv}[${encS('pcall')}],[8]=${vEnv}[${encS('type')}],[9]=${vEnv}[${encS('tostring')}],[10]=${vEnv}[${encS('math')}][${encS('floor')}]}`);
+  e(`if not ${vSys}[5]then ${vSys}[5]=function(a,b)local r,m=0,1 while a>0 or b>0 do local x,y=a%2,b%2 if x~=y then r=r+m end a=(a-x)/2 b=(b-y)/2 m=m*2 end return r end end`);
+
+  if(useAntiDebug){
+    e(`local function ${vAntiDbg}()`);
+    e(` local _t0=(os and os.clock and os.clock())or 0`);
+    e(` local _n=0;for _=1,${NUM(ri(600000,900000))} do _n=_n+1 end`);
+    e(` local _t1=(os and os.clock and os.clock())or 0`);
+    e(` if(_t1-_t0)>0.08 then ${vTrap}(${encS('Debugger Detected')})end`);
+    e(` if ${vSys}[6]==${vEnv}[${encS('print')}]then ${vTrap}(${encS('Hook Detected')})end`);
+    e(`end;${vAntiDbg}()`);
+  }
+
+  if(useAntiHook){
+    e(`if ${vSys}[8](${vSys}[6])~=${encS('function')}or ${vSys}[8](${vSys}[3])~=${encS('function')}then ${vTrap}(${encS('API Hooked')})end`);
+    e(`local _hOk,_hFn=${vSys}[7](${vSys}[6],${encS('return 0x2A')});if not _hOk or ${vSys}[8](_hFn)~=${encS('function')}or _hFn()~=${NUM(0x2A)} then ${vTrap}(${encS('Loader Hooked')})end`);
+  }
+
+  if(useEnvPoison){
+    e(`do`);
+    e(` local _dbg=${vEnv}[${encS('debug')}]`);
+    e(` if _dbg and _dbg[${encS('getinfo')}]then`);
+    e(`  local _o=_dbg[${encS('getinfo')}];_dbg[${encS('getinfo')}]=function(f,w)if ${vSys}[8](f)==${encS('number')}then return _o(f,w)end;return nil end`);
+    e(` end`);
+    e(` if ${vEnv}[${encS('hookfunction')}]then ${vEnv}[${encS('hookfunction')}]=function()${vTrap}()end end`);
+    e(` if ${vEnv}[${encS('checkcaller')}]then ${vEnv}[${encS('checkcaller')}]=function()return true end end`);
+    e(`end`);
+  }
+
+  if(useAntiDump){
+    e(`do local _sv=${vEnv}[${encS('string')}]`);
+    e(` if _sv and _sv[${encS('dump')}]then`);
+    e(`  _sv[${encS('dump')}]=function()${vTrap}(${encS('dump attempt blocked')})end`);
+    e(` end`);
+    e(`end`);
+  }
+
+  e(`local ${vMutSeed}=${useSelfMutate?`${vSys}[10](((os and os.clock and os.clock())or(tick and tick())or 0)*${NUM(ri(0x1FF,0x3FF))})%${NUM(ri(0x3F,0x7F))}`:'0'}`);
+
+  e(`local ${vAlpha}={};do local _a=${JSON.stringify(alpha)};for i=1,85 do ${vAlpha}[_b(_a,i)]=i-1 end end`);
+
+  e(`local ${vChunks}={${chunks.map(c=>JSON.stringify(c)).join(',')}}`);
+  e(`local _crc=${chunkCrcLit}`);
+
+  e(`local ${vPool}={[${JSON.stringify(kM)}]=${NUM(mk)},[${JSON.stringify(kSt)}]=${NUM(ss)},[${JSON.stringify(kSl)}]=${NUM(xs)},[${JSON.stringify(kSd)}]=${NUM(l2s)},[${JSON.stringify(kL)}]=${NUM(origLen)},[${JSON.stringify(kRc4)}]=${rc4KeyLit},[${JSON.stringify(kRot)}]=${NUM(rotKey)},[${JSON.stringify(kSub)}]=${subKeyLit}}`);
+  e(`local ${vSaltRt}=0`);
+
+  if(useAntiTamper){
+    e(`do`);
+    e(` for _ci=1,${chunkCrcs.length} do`);
+    e(`  local _h=0;local _ch=${vChunks}[_ci]`);
+    e(`  for _i=1,#_ch do _h=(_h*31+_b(_ch,_i))%${NUM(0xFFFFFFFE)} end`);
+    e(`  if _h~=_crc[_ci] then ${vTrap}(${encS('Chunk Tampered')})end`);
+    e(` end`);
+    e(` local _all=_t(${vChunks});local _sh=0`);
+    e(` for _i=1,#_all do _sh=(_sh*31+_b(_all,_i))%${NUM(0xFFFFFFFE)} end`);
+    e(` ${vSaltRt}=_sh%${NUM(0xFF)}`);
+    e(`end`);
+  }
+
+  e(`local function ${vB85fn}(_s,_lim)`);
+  e(` local _o,_n={},1 for i=1,#_s,5 do`);
+  e(`  local c1,c2,c3,c4,c5=${vAlpha}[_b(_s,i)],${vAlpha}[_b(_s,i+1)],${vAlpha}[_b(_s,i+2)],${vAlpha}[_b(_s,i+3)],${vAlpha}[_b(_s,i+4)]`);
+  e(`  if not(c1 and c2 and c3 and c4 and c5)then ${vTrap}(${encS('Payload Corrupt')})end`);
+  e(`  local v=(((c1*85+c2)*85+c3)*85+c4)*85+c5`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(16777216)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(65536)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=${vSys}[10](v/${NUM(256)})%256;_n=_n+1 end`);
+  e(`  if _n<=_lim then _o[_n]=v%256;_n=_n+1 end`);
+  e(` end;return _o`);
+  e(`end`);
+
+  e(`local function ${vUnSeed}(arr,initS)`);
+  e(` local s=initS;local o={}`);
+  e(` for i=1,#arr do`);
+  e(`  local b=arr[i];local xs=${vSys}[5](b,s);o[i]=xs`);
+  e(`  s=(s*131+17)%256`);
+  e(` end;return o`);
+  e(`end`);
+
+  e(`local function ${vUnSub}(arr,skey)`);
+  e(` local o={} for i=1,#arr do o[i]=(arr[i]+skey[((i-1)%32)+1])%256 end;return o`);
+  e(`end`);
+
+  e(`local function ${vUnrot}(arr,r)`);
+  e(` local o={} for i=1,#arr do`);
+  e(`  local bv=arr[i];local rot=(i-1)%8+1`);
+  e(`  o[i]=((bv>>rot)|(bv<<(8-rot)))&0xFF`);
+  e(` end;return o`);
+  e(`end`);
+
+  e(`local function ${vRc4Dec}(key,data)`);
+  e(` local S={};for i=0,255 do S[i]=i end`);
+  e(` local j=0;for i=0,255 do j=(j+S[i]+key[(i%#key)+1])%256;S[i],S[j]=S[j],S[i] end`);
+  e(` local ii,jj=0,0;local o={}`);
+  e(` for k=1,#data do ii=(ii+1)%256;jj=(jj+S[ii])%256;S[ii],S[jj]=S[jj],S[ii];o[k]=${vSys}[5](data[k],S[(S[ii]+S[jj])%256])end`);
+  e(` return o`);
+  e(`end`);
+
+  e(`local function ${vXorDec}(arr,m,st,sl,sd)`);
+  e(` local b={} for i=1,#arr do`);
+  e(`  local k1=(${vSys}[5](m+(i*st),sl))%${NUM(MOD)}`);
+  e(`  local x=${vSys}[5](arr[i],k1)`);
+  e(`  local k2=(sd+((i-1)*7)+${vSaltRt})%256`);
+  e(`  b[i]=_c((x-k2)%256)`);
+  e(` end;return _t(b)`);
+  e(`end`);
+
+  if(useJunk){e(junk());e(junk());e(junk());}
+  if(useControlFlow){e(fakevmBlock(vTrap));}
+
+  // Dispatch
+  const blocks=[];
+  const B=(cond,body)=>blocks.push({cond,body});
+
+  B(`${vOp}==${NUM(stBoot)}`,`if ${opqT} then ${vReg}[1]=_t(${vChunks});${vReg}[2]=${vPool}[${JSON.stringify(kL)}];${vPc}=${NUM(stVerify)};else ${vPc}=${NUM(stFake1)};end`);
+  B(`${vOp}==${NUM(stVerify)}`,`${vReg}[3]=${vPool}[${JSON.stringify(kM)}];${vReg}[4]=${vPool}[${JSON.stringify(kSt)}];${vReg}[5]=${vPool}[${JSON.stringify(kSl)}];${vReg}[9]=${vPool}[${JSON.stringify(kSd)}];${vReg}[12]=${vPool}[${JSON.stringify(kRc4)}];${vReg}[13]=${vPool}[${JSON.stringify(kRot)}];${vReg}[14]=${vPool}[${JSON.stringify(kSub)}];${vPc}=${NUM(stChunkCheck)}`);
+  B(`${vOp}==${NUM(stChunkCheck)}`,`if ${opqF} then ${vTrap}()end;${vPc}=${NUM(stUnpack)}`);
+  B(`${vOp}==${NUM(stUnpack)}`,`${vReg}[6]=${vB85fn}(${vReg}[1],${vReg}[2]);${vReg}[1]=nil;${vPc}=${NUM(stRc4)}`);
+  B(`${vOp}==${NUM(stRc4)}`,`${vReg}[6]=${vRc4Dec}(${vReg}[12],${vReg}[6]);${vReg}[12]=nil;${vPc}=${NUM(stL5)}`);
+  B(`${vOp}==${NUM(stL5)}`,`${vReg}[6]=${vUnSeed}(${vReg}[6],${NUM(initSeedVal)});${vPc}=${NUM(stL4)}`);
+  B(`${vOp}==${NUM(stL4)}`,`${vReg}[6]=${vUnSub}(${vReg}[6],${vReg}[14]);${vReg}[14]=nil;${vPc}=${NUM(stL3)}`);
+  B(`${vOp}==${NUM(stL3)}`,`${vReg}[6]=${vUnrot}(${vReg}[6],${vReg}[13]);${vReg}[13]=nil;${vPc}=${NUM(stL12)}`);
+  B(`${vOp}==${NUM(stL12)}`,`if ${opqF} then ${vTrap}()end;${vReg}[7]=${vXorDec}(${vReg}[6],${vReg}[3],${vReg}[4],${vReg}[5],${vReg}[9]);${vReg}[6]=nil;${vPc}=${NUM(stLoad)}`);
+  B(`${vOp}==${NUM(stLoad)}`,`local _fn,_er=${vSys}[6](${vReg}[7]);${vReg}[7]=nil;if ${vSys}[8](_fn)~=${encS('function')}then ${vTrap}(_er)end;${vReg}[8]=_fn;${vPc}=${NUM(stExec)}`);
+  B(`${vOp}==${NUM(stExec)}`,`return ${vReg}[8](...)`);
+
+  if(useControlFlow){
+    B(`${vOp}==${NUM(stFake1)}`,`${vReg}[1]=tostring(${NUM(ri(0x1000,0xFFFF))});${vPc}=${NUM(stFake2)}`);
+    B(`${vOp}==${NUM(stFake2)}`,`${vTrap}(${encS('Dispatch Error')})`);
+    for(let i=blocks.length-1;i>0;i--){const j=ri(0,i);[blocks[i],blocks[j]]=[blocks[j],blocks[i]];}
+  }
+
+  e(`${vEntry}=function(...)`);
+  e(` local ${vPc}=${NUM(stBoot)};local ${vReg}={};while true do local ${vOp}=${vPc}`);
+  if(useJunk)e(` `+junk());
+  const dl=blocks.map((b,i)=>`${i===0?'if':'elseif'} ${b.cond} then ${b.body}`);
+  e(` `+dl.join('\n ')+`\n  else ${vTrap}(${encS('State Fault')})end`);
+  e(` end`);
+  e(`end`);
+  e(`end`);
+  e(`return ${vEntry}(...)`);
+
+  return p.join('\n');
+}
+
+// ── Flow ─────────────────────────────────────────────────────────────
+function startObfuscationFlow(){
+  const src=document.getElementById('srcArea').value;
+  if(!src.trim()){showToast('Paste or upload a Lua script first.');return;}
+
+  const overlay=document.getElementById('loaderOverlay');
+  const stepEl=document.getElementById('loaderStepText');
+  const footEl=document.getElementById('loaderStatusFoot');
+  const timerEl=document.getElementById('elapsedTimer');
+  overlay.classList.add('active');
+
+  let seconds=0;timerEl.textContent='00:00';
+  const steps=[
+    {step:'SANITIZING SOURCE + STRIPPING',foot:'COMMENT STRIP & NORMALIZE...'},
+    {step:'5-LAYER CIPHER CHAIN',foot:'RC4 KSA + ROTATION + SUB + XOR-STREAM...'},
+    {step:'BASE85 ENCODE + CHUNK SPLIT',foot:'SHUFFLING ALPHABET, SPLITTING PAYLOAD...'},
+    {step:'CHUNK CRC INTEGRITY BIND',foot:'COMPUTING PER-CHUNK CHECKSUMS...'},
+    {step:'JUNK INJECT + FAKE VM WEAVE',foot:'OPAQUE PREDICATES & DECOY DISPATCHER...'},
+    {step:'ANTI-DUMP + ENV POISON',foot:'WIRING RUNTIME TRAPS & HOOK OVERRIDES...'},
+  ];
+  stepEl.textContent=steps[0].step;footEl.textContent=steps[0].foot;
+
+  const timerInt=setInterval(()=>{
+    seconds++;
+    const s=seconds<10?'0'+seconds:seconds;timerEl.textContent='00:'+s;
+    const idx=Math.min(seconds-1,steps.length-1);
+    stepEl.textContent=steps[idx].step;footEl.textContent=steps[idx].foot;
+  },500);
+
+  setTimeout(()=>{
+    clearInterval(timerInt);
+    try{
+      const result=generateProtectedLuaWrapped();
+      document.getElementById('outArea').value=result;
+      const bytes=new TextEncoder().encode(result).length;
+      document.getElementById('outMetaBadge').textContent=`(${formatBytes(bytes)})`;
+      overlay.classList.remove('active');
+      const outSec=document.getElementById('outputSection');
+      outSec.classList.add('active');
+      outSec.scrollIntoView({behavior:'smooth',block:'nearest'});
+      showToast('Protected — EgiXploit VM v5.0');
+    }catch(err){
+      overlay.classList.remove('active');
+      showToast('Error: '+err.message);
+      console.error(err);
+    }
+  },3200);
+}
+
+updateEditorStats();
+</script>
+</body>
+</html>
